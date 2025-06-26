@@ -1,0 +1,15 @@
+fourwheel\queue.o: ../Middlewares/Third_Party/FreeRTOS/Source/queue.c
+fourwheel\queue.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
+fourwheel\queue.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+fourwheel\queue.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
+fourwheel\queue.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
+fourwheel\queue.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+fourwheel\queue.o: ../Core/Inc/FreeRTOSConfig.h
+fourwheel\queue.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h
+fourwheel\queue.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h
+fourwheel\queue.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h
+fourwheel\queue.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/portmacro.h
+fourwheel\queue.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h
+fourwheel\queue.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/task.h
+fourwheel\queue.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/list.h
+fourwheel\queue.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h

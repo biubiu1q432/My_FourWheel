@@ -1,0 +1,12 @@
+fourwheel\list.o: ../Middlewares/Third_Party/FreeRTOS/Source/list.c
+fourwheel\list.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
+fourwheel\list.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
+fourwheel\list.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
+fourwheel\list.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+fourwheel\list.o: ../Core/Inc/FreeRTOSConfig.h
+fourwheel\list.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h
+fourwheel\list.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h
+fourwheel\list.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h
+fourwheel\list.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/portmacro.h
+fourwheel\list.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h
+fourwheel\list.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/list.h

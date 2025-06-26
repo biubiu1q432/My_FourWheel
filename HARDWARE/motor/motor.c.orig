@@ -1,0 +1,132 @@
+#include "motor.h"
+
+
+
+void Motor_init(){
+   
+   //编码器初始化
+   HAL_TIM_Encoder_Start(&TIM_MOTOR_A_EC,TIM_CHANNEL_ALL);
+   HAL_TIM_Encoder_Start(&TIM_MOTOR_B_EC,TIM_CHANNEL_ALL);
+   HAL_TIM_Encoder_Start(&TIM_MOTOR_C_EC,TIM_CHANNEL_ALL);
+   HAL_TIM_Encoder_Start(&TIM_MOTOR_D_EC,TIM_CHANNEL_ALL);
+   //电机初始化
+    HAL_TIM_PWM_Start(&TIM_MOTOR_A_1,TIM_CHANNEL_1);
+    HAL_TIM_PWM_Start(&TIM_MOTOR_A_2,TIM_CHANNEL_1);
+    HAL_TIM_PWM_Start(&TIM_MOTOR_B,TIM_CHANNEL_1);
+	HAL_TIM_PWM_Start(&TIM_MOTOR_B,TIM_CHANNEL_2);
+	HAL_TIM_PWM_Start(&TIM_MOTOR_C,TIM_CHANNEL_1);
+    HAL_TIM_PWM_Start(&TIM_MOTOR_C,TIM_CHANNEL_2);
+	HAL_TIM_PWM_Start(&TIM_MOTOR_D,TIM_CHANNEL_3);
+    HAL_TIM_PWM_Start(&TIM_MOTOR_D,TIM_CHANNEL_4);
+
+}
+
+/**
+ * @description 设置车体运动参数，放到结构体MotorTargetParm中
+ */
+void Set_CarParam(MotorTargetParm* carTar,float target_vel,float omeiga){
+	float deritaVel = omeiga*wheelDiameter;
+	
+	carTar->Tar_Leftvel = target_vel + deritaVel;
+	carTar->Tar_Rigvel = target_vel-deritaVel;
+	carTar->Tar_omeiga = omeiga;
+}
+
+/**
+ * @description 逆运动学，车体运动状态存在catstat
+ */
+void CarInv_Kinematics(Car_Stat* catstat){
+	
+	//编码器
+	int lf = __MoterParamGet(&TIM_MOTOR_A_EC);
+	int lb = __MoterParamGet(&TIM_MOTOR_B_EC);
+	int rf = __MoterParamGet(&TIM_MOTOR_C_EC);
+	int rb = __MoterParamGet(&TIM_MOTOR_D_EC);
+	
+	//距离s
+	float lf_dis = (lf/OnceEcNum)*wheelDiameter;
+	float lb_dis = (lf/OnceEcNum)*wheelDiameter;
+	float rf_dis = (lf/OnceEcNum)*wheelDiameter;
+	float rb_dis = (lf/OnceEcNum)*wheelDiameter;
+
+	//速度
+	float lf_vel = lf_dis/Ts; 
+	float lb_vel = lf_dis/Ts;
+	float rf_vel = lf_dis/Ts;
+	float rb_vel = lf_dis/Ts;
+	float LeftVel = (lf_vel+lb_vel)/2.0f;
+	float RigVel = (rf_vel+rb_vel)/2.0f;
+	
+	catstat->Vel =  (LeftVel+RigVel)/2.0f;//车速度
+	catstat->Omeiga  = (RigVel-LeftVel)/WheelToCenter;//车角速度
+	catstat ->Odom += (lf_dis+lb_dis+rf_dis+rb_dis)/4.0f;//车里程计
+ 
+}
+
+int __MoterParamGet(TIM_HandleTypeDef* tim){
+
+	int tmp = __HAL_TIM_GET_COUNTER(tim);
+	if(tmp > 60000)	tmp = tmp - Arr;
+	return tmp;
+}
+
+void __PWM_MotorSet(float LeftFrt,float leftBack,float RigFrt,float RigtBack){
+	
+	/*A*/
+	if(LeftFrt <= 0){
+		//方向
+		__HAL_TIM_SetCompare(&TIM_MOTOR_A_1,TIM_CHANNEL_1,Arr);
+		__HAL_TIM_SetCompare(&TIM_MOTOR_A_2,TIM_CHANNEL_1,Arr+LeftFrt);		
+	} 
+	else if(LeftFrt >0){
+		//方向
+		__HAL_TIM_SetCompare(&TIM_MOTOR_A_2,TIM_CHANNEL_1,Arr);
+
+		__HAL_TIM_SetCompare(&TIM_MOTOR_A_1,TIM_CHANNEL_1,Arr-LeftFrt);
+	} 
+
+	/*B*/
+	if(leftBack <= 0){
+		//方向
+		__HAL_TIM_SetCompare(&TIM_MOTOR_B,TIM_CHANNEL_1,Arr);
+
+		__HAL_TIM_SetCompare(&TIM_MOTOR_B,TIM_CHANNEL_2,leftBack+Arr);		
+	} 
+	else if(leftBack >0){
+		//方向
+		__HAL_TIM_SetCompare(&TIM_MOTOR_B,TIM_CHANNEL_2,Arr);
+
+		__HAL_TIM_SetCompare(&TIM_MOTOR_B,TIM_CHANNEL_1,Arr-leftBack);
+	} 
+	
+	/*C*/
+	if(leftBack <= 0){
+		//方向
+		__HAL_TIM_SetCompare(&TIM_MOTOR_C,TIM_CHANNEL_1,Arr);
+
+		__HAL_TIM_SetCompare(&TIM_MOTOR_C,TIM_CHANNEL_2,leftBack+Arr);		
+	} 
+	else if(leftBack >0){
+		//方向
+		__HAL_TIM_SetCompare(&TIM_MOTOR_C,TIM_CHANNEL_2,Arr);
+
+		__HAL_TIM_SetCompare(&TIM_MOTOR_C,TIM_CHANNEL_1,Arr-leftBack);
+	} 
+	
+	/*D*/
+	if(leftBack <= 0){
+		//方向
+		__HAL_TIM_SetCompare(&TIM_MOTOR_D,TIM_CHANNEL_3,Arr);
+
+		__HAL_TIM_SetCompare(&TIM_MOTOR_D,TIM_CHANNEL_4,leftBack+Arr);		
+	} 
+	else if(leftBack >0){
+		//方向
+		__HAL_TIM_SetCompare(&TIM_MOTOR_D,TIM_CHANNEL_4,Arr);
+
+		__HAL_TIM_SetCompare(&TIM_MOTOR_D,TIM_CHANNEL_3,Arr-leftBack);
+	} 
+}
+
+
+

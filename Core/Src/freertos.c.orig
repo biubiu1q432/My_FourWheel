@@ -1,0 +1,772 @@
+/* USER CODE BEGIN Header */
+/**
+  ******************************************************************************
+  * File Name          : freertos.c
+  * Description        : Code for freertos applications
+  ******************************************************************************
+  * @attention
+  *
+  * Copyright (c) 2025 STMicroelectronics.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
+  */
+/* USER CODE END Header */
+
+/* Includes ------------------------------------------------------------------*/
+#include "FreeRTOS.h"
+#include "task.h"
+#include "main.h"
+#include "cmsis_os.h"
+
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+#include "motor.h"
+#include "pid.h"
+#include "lowpass_filter.h"
+#include "usart.h"
+#include "wit_c_sdk.h"
+
+/* USER CODE END Includes */
+
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
+
+/* USER CODE END PTD */
+
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+
+#define ACC_UPDATE		0x01
+#define GYRO_UPDATE		0x02
+#define ANGLE_UPDATE	0x04
+#define MAG_UPDATE		0x08
+#define READ_UPDATE		0x80
+static volatile char s_cDataUpdate = 0, s_cCmd = 0xff;
+const uint32_t c_uiBaud[10] = {0, 4800, 9600, 19200, 38400, 57600, 115200, 230400, 460800, 921600};
+static void CmdProcess(void);
+static void AutoScanSensor(void);
+static void SensorUartSend(uint8_t *p_data, uint32_t uiSize);
+static void SensorDataUpdata(uint32_t uiReg, uint32_t uiRegNum);
+static void Delayms(uint16_t ucMs);
+static float MpuYawInit(int cnt);
+static float normalizeYaw(float yaw);
+char mpu_tmp;
+
+/* USER CODE END PM */
+
+/* Private variables ---------------------------------------------------------*/
+/* USER CODE BEGIN Variables */
+LOWPASS_FILTER_T velFilter;
+Car_Stat carStat;
+CarOrderParam OrderParam;
+SplitCarTargetParm Cartar;
+enum  MoveTaskNum TASKNUM;
+
+PidCar pidvel;
+PidCar piddis;
+PidWheel pidsita;
+
+extern DMA_HandleTypeDef hdma_usart1_tx;
+extern DMA_HandleTypeDef hdma_usart1_rx;
+extern DMA_HandleTypeDef hdma_usart3_rx;
+extern DMA_HandleTypeDef hdma_usart3_tx;
+
+uint8_t ORDER_DATA[20];
+volatile int TaskOverFlag=1;
+
+int mpuFlag=0;
+
+/* USER CODE END Variables */
+/* Definitions for defaultTask */
+osThreadId_t defaultTaskHandle;
+const osThreadAttr_t defaultTask_attributes = {
+  .name = "defaultTask",
+  .stack_size = 256 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+/* Definitions for MoveControlTask */
+osThreadId_t MoveControlTaskHandle;
+const osThreadAttr_t MoveControlTask_attributes = {
+  .name = "MoveControlTask",
+  .stack_size = 256 * 4,
+  .priority = (osPriority_t) osPriorityAboveNormal,
+};
+/* Definitions for ReadMpuTask */
+osThreadId_t ReadMpuTaskHandle;
+const osThreadAttr_t ReadMpuTask_attributes = {
+  .name = "ReadMpuTask",
+  .stack_size = 256 * 4,
+  .priority = (osPriority_t) osPriorityLow,
+};
+/* Definitions for OdarGetTask */
+osThreadId_t OdarGetTaskHandle;
+const osThreadAttr_t OdarGetTask_attributes = {
+  .name = "OdarGetTask",
+  .stack_size = 256 * 4,
+  .priority = (osPriority_t) osPriorityLow,
+};
+/* Definitions for DataSendTask */
+osThreadId_t DataSendTaskHandle;
+const osThreadAttr_t DataSendTask_attributes = {
+  .name = "DataSendTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
+};
+
+/* Private function prototypes -----------------------------------------------*/
+/* USER CODE BEGIN FunctionPrototypes */
+
+/* USER CODE END FunctionPrototypes */
+
+void StartDefaultTask(void *argument);
+void MoveControl(void *argument);
+void ReadMpu(void *argument);
+void OdarGet(void *argument);
+void DataSend(void *argument);
+
+void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
+
+/* Hook prototypes */
+void configureTimerForRunTimeStats(void);
+unsigned long getRunTimeCounterValue(void);
+
+/* USER CODE BEGIN 1 */
+/* Functions needed when configGENERATE_RUN_TIME_STATS is on */
+__weak void configureTimerForRunTimeStats(void)
+{
+
+}
+
+__weak unsigned long getRunTimeCounterValue(void)
+{
+return 0;
+}
+/* USER CODE END 1 */
+
+/**
+  * @brief  FreeRTOS initialization
+  * @param  None
+  * @retval None
+  */
+void MX_FREERTOS_Init(void) {
+  /* USER CODE BEGIN Init */
+
+  /* USER CODE END Init */
+
+  /* USER CODE BEGIN RTOS_MUTEX */
+    /* add mutexes, ... */
+  /* USER CODE END RTOS_MUTEX */
+
+  /* USER CODE BEGIN RTOS_SEMAPHORES */
+    /* add semaphores, ... */
+  /* USER CODE END RTOS_SEMAPHORES */
+
+  /* USER CODE BEGIN RTOS_TIMERS */
+    /* start timers, add new ones, ... */
+  /* USER CODE END RTOS_TIMERS */
+
+  /* USER CODE BEGIN RTOS_QUEUES */
+    /* add queues, ... */
+  /* USER CODE END RTOS_QUEUES */
+
+  /* Create the thread(s) */
+  /* creation of defaultTask */
+  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+
+  /* creation of MoveControlTask */
+  MoveControlTaskHandle = osThreadNew(MoveControl, NULL, &MoveControlTask_attributes);
+
+  /* creation of ReadMpuTask */
+  ReadMpuTaskHandle = osThreadNew(ReadMpu, NULL, &ReadMpuTask_attributes);
+
+  /* creation of OdarGetTask */
+  OdarGetTaskHandle = osThreadNew(OdarGet, NULL, &OdarGetTask_attributes);
+
+  /* creation of DataSendTask */
+  DataSendTaskHandle = osThreadNew(DataSend, NULL, &DataSendTask_attributes);
+
+  /* USER CODE BEGIN RTOS_THREADS */
+    /* add threads, ... */
+  /* USER CODE END RTOS_THREADS */
+
+  /* USER CODE BEGIN RTOS_EVENTS */
+    /* add events, ... */
+  /* USER CODE END RTOS_EVENTS */
+
+}
+
+/* USER CODE BEGIN Header_StartDefaultTask */
+/**
+  * @brief  Function implementing the defaultTask thread.
+  * @param  argument: Not used
+  * @retval None
+  */
+/* USER CODE END Header_StartDefaultTask */
+void StartDefaultTask(void *argument)
+{
+  /* USER CODE BEGIN StartDefaultTask */
+
+    /* Infinite loop */
+    for(;;)
+    {
+
+//		//实时速度
+//		printf("%f		%f		%f		%f\r\n",(carStat.motorStat.LeftFrt.vel),
+//			(carStat.motorStat.leftBack.vel),
+//			(carStat.motorStat.RigFrt.vel),
+//			(carStat.motorStat.RigBack.vel));
+
+//		printf("SITA:	%f	Tar_w:  %f	LF	%f	LB  %f  RF  %f  RB   %f\r\n",carStat.Sita,
+//		Cartar.Tar_LFvel,
+//		Cartar.Tar_LBvel,
+//		Cartar.Tar_RFvel,
+//		Cartar.Tar_RBvel
+//		);
+		
+//		printf("%f  %f  %f\r\n",pidvel.rf.actual,pidvel.rf.target,pidvel.rf.err_sum);
+		
+		
+		
+		HAL_GPIO_TogglePin(LED_GPIO_Port,LED_Pin);
+
+		osDelay(50);
+    }
+  /* USER CODE END StartDefaultTask */
+}
+
+/* USER CODE BEGIN Header_MoveControl */
+/**
+* @brief Function implementing the MoveControlTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_MoveControl */
+void MoveControl(void *argument)
+{
+  /* USER CODE BEGIN MoveControl */
+	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+	const TickType_t xFrequency = pdMS_TO_TICKS(Ts*1000); // 10ms周期
+	TickType_t xLastWakeTime = xTaskGetTickCount();
+    
+	PidMlpi_Param_Init(&pidvel,1.8,0.0001,14);
+	PidMlpi_Param_Init(&piddis,1.5,0.0001,10);
+	PidParam_Init(&pidsita,0.5,0.00,0.1);
+    
+	LOWPASS_FILTER_Init(&velFilter, 0.01);
+		
+	while(mpuFlag){
+		osDelay(200);
+	}
+	
+	
+	
+    /* Infinite loop */
+    for(;;)
+    {
+        CarInv_Kinematics(&carStat);
+
+		/*指定距离，前进*/
+		if(TASKNUM == AheadSpDis){
+			//更新Cartar
+			TaskOverFlag = CarDisSet(&Cartar,&carStat,&piddis);
+			if(TaskOverFlag){
+				TASKNUM = Free;
+				Refresh_CarTar(&Cartar,&OrderParam);
+				printf("AheadSpDis TASK OVER !\r\n");
+			} 
+		}	
+		
+		/*旋转指定角度*/
+		else if(TASKNUM == RotateSpAngle){
+			//更新Cartar
+			TaskOverFlag = CarSitaSet(&Cartar,&carStat,&pidsita);
+			if(TaskOverFlag){
+				TASKNUM = Free;
+				Refresh_CarTar(&Cartar,&OrderParam);
+				printf("RotateSpAngle TASK OVER !\r\n");
+			}
+		}
+		/*空闲*/
+		else{
+			Refresh_CarDis(&carStat);//距离重置
+			
+		}
+		
+		//实时最终Cartar下的速度
+		CarSitaSet(&Cartar,&carStat,&pidsita);
+		WheelVelSet(&Cartar,&carStat,&pidvel);
+		
+		
+		vTaskDelayUntil(&xLastWakeTime, xFrequency);
+	}
+  /* USER CODE END MoveControl */
+}
+
+/* USER CODE BEGIN Header_ReadMpu */
+/**
+* @brief Function implementing the ReadMpuTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_ReadMpu */
+void ReadMpu(void *argument)
+{
+  /* USER CODE BEGIN ReadMpu */
+	float yaw;
+	float fAcc[3], fGyro[3], fAngle[3];
+	int i;
+	
+	Usart2Init(9600);
+	
+	WitInit(WIT_PROTOCOL_NORMAL, 0x50);//初始化JY61
+	WitSerialWriteRegister(SensorUartSend); //注册写回调函数
+	WitRegisterCallBack(SensorDataUpdata);//注册获取传感器数据回调函数
+	WitDelayMsRegister(Delayms);
+	printf("\r\n********************** wit-motion normal example  ************************\r\n");
+	AutoScanSensor();  //自动搜索传感器
+	
+	//初始化
+	float yaw_init =  MpuYawInit(10);
+	mpuFlag = 1;
+	/* Infinite loop */
+    for(;;)
+    {
+		CmdProcess();
+		if(s_cDataUpdate){
+		  fAngle[2] = sReg[Roll+2] / 32768.0f * 180.0f;
+		  if(s_cDataUpdate & ANGLE_UPDATE){
+				s_cDataUpdate &= ~ANGLE_UPDATE;
+				yaw =  normalizeYaw(fAngle[2] - yaw_init);
+				carStat.Sita = yaw;
+		  }
+		}
+		
+        osDelay(15);
+    }
+  /* USER CODE END ReadMpu */
+}
+
+/* USER CODE BEGIN Header_OdarGet */
+/**
+* @brief Function implementing the OdarGetTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_OdarGet */
+void OdarGet(void *argument)
+{
+  /* USER CODE BEGIN OdarGet */
+
+	/* Infinite loop */
+    for(;;)
+    {
+		
+		// 阻塞等待通知
+		ulTaskNotifyTake(            // 比xTaskNotifyWait更简洁
+            pdTRUE,                  // 退出时清零通知值
+            portMAX_DELAY            // 无限等待
+        );
+		
+		
+		//命令表格：
+		//指令1：	v,w
+		//指令2：	v,dis
+		//指令3:	w:sita	
+		char task_seg[3];
+		float value1, value2;
+		sscanf(ORDER_DATA, "%[^|]|%f|%f", task_seg, &value1, &value2);
+		
+		if(!TaskOverFlag){
+			printf("undone!,wait for it\r\n");
+		}
+		
+		else if((strcmp(task_seg, "1") == 0)){
+			OrderParam.Order_vel  = value1;
+			OrderParam.Order_omeiga = value2;
+			TASKNUM = Nav2Interfaces;
+			Refresh_CarDis(&carStat);//距离重置
+			Split_CarTarParam(&Cartar,&OrderParam);//任务分解
+		}
+		
+		else if((strcmp(task_seg, "2") == 0)){
+			
+			printf("[TASK2] val:%f	dis:%f\r\n",value1,value2);
+			Refresh_CarDis(&carStat);//距离重置
+
+			OrderParam.Order_MAXvel  = value1;
+			OrderParam.Order_dis =  value2;
+			TASKNUM = AheadSpDis;
+			
+			Split_CarTarParam(&Cartar,&OrderParam);//任务分解
+		}
+		
+		else if((strcmp(task_seg, "3") == 0)){
+			OrderParam.Order_omeiga = value1;
+			OrderParam.Order_sita = value2;
+			TASKNUM = RotateSpAngle;
+			Refresh_CarDis(&carStat);//距离重置
+			Split_CarTarParam(&Cartar,&OrderParam);
+		}
+		
+		else{
+			printf("ODRDER ERROR");
+		}
+			
+    }
+  /* USER CODE END OdarGet */
+}
+
+/* USER CODE BEGIN Header_DataSend */
+/**
+* @brief Function implementing the DataSendTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_DataSend */
+void DataSend(void *argument)
+{
+  /* USER CODE BEGIN DataSend */
+    uint8_t buffer[4];
+	uint8_t Done[] = "Done";
+    /* Infinite loop */
+    for(;;)
+    {
+				
+		// 阻塞等待通知
+		ulTaskNotifyTake(            // 比xTaskNotifyWait更简洁
+            pdTRUE,                  // 退出时清零通知值
+            portMAX_DELAY            // 无限等待
+        );
+				
+		//DONE
+		if(TaskOverFlag){
+				HAL_UART_Transmit_DMA(&huart3,Done,sizeof(Done));
+				TaskOverFlag = 0;
+		}
+		
+		
+		
+		
+		osDelay(50);
+    }
+  /* USER CODE END DataSend */
+}
+
+/* Private application code --------------------------------------------------*/
+/* USER CODE BEGIN Application */
+
+
+/*ISR*/
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+	
+	//MPU
+	if(huart==(&huart2) ){
+			WitSerialDataIn(mpu_tmp);
+			HAL_UART_Receive_IT(&huart2,&mpu_tmp,1);
+	}
+}
+
+
+
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
+	BaseType_t xHigherPriorityTaskWoken = pdFALSE;	
+	//命令接收中断DMA
+	if(huart == &huart3) {
+		HAL_UARTEx_ReceiveToIdle_DMA(&huart3,ORDER_DATA,sizeof(ORDER_DATA));
+        __HAL_DMA_DISABLE_IT(&hdma_usart3_rx,DMA_IT_HT);
+		//唤醒 OdarGet
+        xTaskNotifyFromISR(
+            OdarGetTaskHandle,     // 目标任务句柄
+            0,                  
+            eNoAction, 			// 仅唤醒
+            &xHigherPriorityTaskWoken
+        );
+		//触发任务切换
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+	}
+	
+
+}
+/*ISR*/
+
+
+/**
+ * @brief 将Yaw角规范化到[-180°, 180°]范围
+ * @param yaw 原始Yaw角度值(单位：度)
+ * @return 规范化后的Yaw角度，范围[-180, 180]
+ */
+static float normalizeYaw(float yaw) {
+    // 第一步：将角度限制在0°-360°范围内
+    yaw = fmodf(yaw, 360.0f);
+    
+    // 处理负数情况：确保在[0, 360)范围内
+    if (yaw < 0) {
+        yaw += 360.0f;
+    }
+    
+    // 第二步：将>180°的角度转换为负角度（周期性映射）
+    if (yaw > 180.0f) {
+        yaw -= 360.0f;
+    }
+    
+    return yaw;
+}
+static float MpuYawInit(int cnt){
+	float init_yaw = 0;	
+	float fAngle[3];
+	int c_=0;
+	while(c_<=cnt){
+		CmdProcess();
+		if(s_cDataUpdate){
+		  fAngle[2] = sReg[Roll+2] / 32768.0f * 180.0f;
+		  if(s_cDataUpdate & ANGLE_UPDATE){
+				c_+=1;
+				s_cDataUpdate &= ~ANGLE_UPDATE;
+				init_yaw += fAngle[2];
+		  }
+		}
+	}	
+	init_yaw = init_yaw/(float)c_;
+	return init_yaw;
+
+}
+
+
+void CopeCmdData(unsigned char ucData)
+{
+	static unsigned char s_ucData[50], s_ucRxCnt = 0;
+	
+	s_ucData[s_ucRxCnt++] = ucData;
+	if(s_ucRxCnt<3)return;										//Less than three data returned
+	if(s_ucRxCnt >= 50) s_ucRxCnt = 0;
+	if(s_ucRxCnt >= 3)
+	{
+		if((s_ucData[1] == '\r') && (s_ucData[2] == '\n'))
+		{
+			s_cCmd = s_ucData[0];
+			memset(s_ucData,0,50);
+			s_ucRxCnt = 0;
+		}
+		else 
+		{
+			s_ucData[0] = s_ucData[1];
+			s_ucData[1] = s_ucData[2];
+			s_ucRxCnt = 2;
+			
+		}
+	}
+
+}
+
+
+static void CmdProcess(void)
+{
+	switch(s_cCmd)
+	{
+		case 'a':	
+			if(WitStartAccCali() != WIT_HAL_OK) 
+				printf("\r\nSet AccCali Error\r\n");
+			break;
+		case 'm':	
+			if(WitStartMagCali() != WIT_HAL_OK) 
+				printf("\r\nSet MagCali Error\r\n");
+			break;
+		case 'e':	
+			if(WitStopMagCali() != WIT_HAL_OK)
+				printf("\r\nSet MagCali Error\r\n");
+			break;
+		case 'u':	
+			if(WitSetBandwidth(BANDWIDTH_5HZ) != WIT_HAL_OK) 
+				printf("\r\nSet Bandwidth Error\r\n");
+			break;
+		case 'U':	
+			if(WitSetBandwidth(BANDWIDTH_256HZ) != WIT_HAL_OK) 
+				printf("\r\nSet Bandwidth Error\r\n");
+			break;
+		case 'B':	
+			if(WitSetUartBaud(WIT_BAUD_115200) != WIT_HAL_OK) 
+				printf("\r\nSet Baud Error\r\n");
+			else 
+				Usart2Init(c_uiBaud[WIT_BAUD_115200]);											
+			break;
+		case 'b':	
+			if(WitSetUartBaud(WIT_BAUD_9600) != WIT_HAL_OK)
+				printf("\r\nSet Baud Error\r\n");
+			else 
+				Usart2Init(c_uiBaud[WIT_BAUD_9600]);												
+			break;
+		case 'R':	
+			if(WitSetOutputRate(RRATE_10HZ) != WIT_HAL_OK) 
+				printf("\r\nSet Rate Error\r\n");
+			break;
+		case 'r':	
+			if(WitSetOutputRate(RRATE_1HZ) != WIT_HAL_OK) 
+				printf("\r\nSet Rate Error\r\n");
+			break;
+		case 'C':	
+			if(WitSetContent(RSW_ACC|RSW_GYRO|RSW_ANGLE|RSW_MAG) != WIT_HAL_OK) 
+				printf("\r\nSet RSW Error\r\n");
+			break;
+		case 'c':	
+			if(WitSetContent(RSW_ACC) != WIT_HAL_OK) 
+				printf("\r\nSet RSW Error\r\n");
+			break;
+		case 'h':
+			//ShowHelp();
+			break;
+	}
+	s_cCmd = 0xff;
+}
+
+// 有static（文件内私有）
+static void SensorUartSend(uint8_t *p_data, uint32_t uiSize)
+{
+    HAL_UART_Transmit(&huart2, p_data, uiSize, HAL_MAX_DELAY);
+}
+
+static void Delayms(uint16_t ucMs)
+{
+	HAL_Delay(ucMs);
+}
+
+static void SensorDataUpdata(uint32_t uiReg, uint32_t uiRegNum)
+{
+	int i;
+    for(i = 0; i < uiRegNum; i++)
+    {
+        switch(uiReg)
+        {
+//            case AX:
+//            case AY:
+            case AZ:
+				s_cDataUpdate |= ACC_UPDATE;
+            break;
+//            case GX:
+//            case GY:
+            case GZ:
+				s_cDataUpdate |= GYRO_UPDATE;
+            break;
+//            case HX:
+//            case HY:
+            case HZ:
+				s_cDataUpdate |= MAG_UPDATE;
+            break;
+//            case Roll:
+//            case Pitch:
+            case Yaw:
+				s_cDataUpdate |= ANGLE_UPDATE;
+            break;
+            default:
+				s_cDataUpdate |= READ_UPDATE;
+			break;
+        }
+		uiReg++;
+    }
+}
+
+static void AutoScanSensor(void)
+{
+	int i, iRetry;
+	
+	for(i = 1; i < 10; i++)
+	{
+		Usart2Init(c_uiBaud[i]);
+		iRetry = 2;
+		do
+		{
+			s_cDataUpdate = 0;
+			WitReadReg(AX, 3);
+			HAL_Delay(100);
+			if(s_cDataUpdate != 0)
+			{
+				printf("%d baud find sensor\r\n\r\n", c_uiBaud[i]);
+				//ShowHelp();
+				return ;
+			}
+			iRetry--;
+		}while(iRetry);		
+	}
+	printf("can not find sensor\r\n");
+	printf("please check your connection\r\n");
+}
+
+
+static void SendData(float value){
+
+	uint8_t buffer[4];
+	buffer[0] = *((uint8_t*)&(value));
+	buffer[1] = *((uint8_t*)&(value) + 1);
+	buffer[2] = *((uint8_t*)&(value) + 2);
+	buffer[3] = *((uint8_t*)&(value) + 3);
+	HAL_UART_Transmit_DMA(&huart3, buffer, sizeof(buffer));
+
+}
+	
+	
+static void Debug_Acutal_Dis(){
+		//目标距离
+	printf("tar:%f		actual:%f  \r\n",Cartar.Tar_dis,carStat.Dis);	
+}
+static void Debug_Tar_Dis(){
+	//实时距离
+	printf("%f		%f		%f		%f\r\n",carStat.motorStat.LeftFrt.dis,
+	carStat.motorStat.leftBack.dis,
+	carStat.motorStat.RigFrt.dis,
+	carStat.motorStat.RigBack.dis
+	);
+
+}
+static void Debug_Acutal_Vel(){
+		//实时速度
+		printf("%f		%f		%f		%f\r\n",(carStat.motorStat.LeftFrt.vel),
+			(carStat.motorStat.leftBack.vel),
+			(carStat.motorStat.RigFrt.vel),
+			(carStat.motorStat.RigBack.vel));
+}
+static void Debug_Tar_Vel(){
+		//目标速度
+		printf("%f		%f		%f		%f\r\n",(Cartar.Tar_LBvel),
+			(Cartar.Tar_LFvel),
+			(Cartar.Tar_RBvel),
+			(Cartar.Tar_RFvel));				
+}
+
+static void Debug_mpu(){
+
+}
+
+static void Debug_Odom(){
+	printf("%f\r\n",carStat.Odom);
+
+}
+
+/*
+	task name		task 当前状态 	 													task 优先级   				最小剩余 task 栈空间
+
+					X: running     正在运行 			 								越大优先级越高	    剩余！
+					B: blocked    等待（自动，osdelay,二值等待）
+					R: ready        就绪
+					D: deleted     删除
+					S: suspended挂起（手动）
+*/	
+static void Debug_taskStat(){
+	char InfoBuffer[200];
+		vTaskList(InfoBuffer);
+		printf("taskName ttaskState ttaskPrio ttaskStack ttaskNum\r\n");
+		printf("%s",InfoBuffer);
+		printf("\r\n");
+		printf("\r\n");
+}
+	
+/* USER CODE END Application */
+

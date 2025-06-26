@@ -1,0 +1,64 @@
+#ifndef __MOTOR_H
+#define __MOTOR_H
+
+#include "main.h"
+#include "tim.h"
+
+
+
+typedef struct
+{
+	float ec;
+	float odom;
+	float vel;
+} Singel_Motor_Stat;//单个电机参数
+
+typedef struct
+{
+	Singel_Motor_Stat LeftFrt;
+	Singel_Motor_Stat leftBack;
+	Singel_Motor_Stat RigFrt;
+	Singel_Motor_Stat RigtBack;
+} All_Motor_Stat;//所有电机参数
+
+
+typedef struct
+{
+	float Odom;
+	float Vel;
+	float Omeiga;
+	float Sita;
+} Car_Stat;//整车参数
+
+typedef struct
+{
+	float Tar_Leftvel;
+	float Tar_Rigvel;
+	float Tar_omeiga;
+} MotorTargetParm;//整车参数
+
+
+//电机初始化
+void AllMotorInit(TIM_HandleTypeDef Left,
+	TIM_HandleTypeDef LeftFrt_ec,
+	TIM_HandleTypeDef leftBack_ec,	
+	TIM_HandleTypeDef right,	
+	TIM_HandleTypeDef RigFrt_ec,
+	TIM_HandleTypeDef RigtBack_ec);
+
+
+//PWM设置
+void __PWM_MotorSet(float LeftFrt,float leftBack,float RigFrt,float RigtBack);
+//编码器数据获取
+int __MoterParamGet(TIM_HandleTypeDef* tim);
+//目标值
+void __Set_CarParam(MotorTargetParm* carTar,float target_vel,float omeiga);
+//硬件初始化
+void Motor_init(void);
+//运动学逆解
+void CarInv_Kinematics(Car_Stat* catstat);
+
+
+#endif
+
+
