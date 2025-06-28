@@ -3,7 +3,12 @@
 #include "math.h"
 
 
-#define CLAMP_MAX(x, max) ((x) > (max) ? (max) : (x))
+#define ABS_CLAMP_MAX(val, abs_max) \
+    (fabsf(val) > fabsf(abs_max) ? \
+        (copysignf(fabsf(abs_max), val)) : \
+        (val))
+		
+		
 float fastest_fabsf(float x) {
     // 联合类型实现位级操作
     union { float f; uint32_t i; } u = { x };
@@ -28,13 +33,12 @@ int CarDisCalibration(SplitCarTargetParm* carTar,Car_Stat* carstat,PidCar* dispi
 
 	//判定
 	if((fastest_fabsf(err) <= 0.1f)) return 1;	
-
 	
 	__carStatVel_Update(carTar,
-		CLAMP_MAX(__Realize_PID(&dispid->lf,err),(carTar->MaxVel)),
-		CLAMP_MAX(__Realize_PID(&dispid->lb,err),(carTar->MaxVel)),
-		CLAMP_MAX(__Realize_PID(&dispid->rb,err),(carTar->MaxVel)),
-		CLAMP_MAX(__Realize_PID(&dispid->rf,err),(carTar->MaxVel))		
+		ABS_CLAMP_MAX(__Realize_PID(&dispid->lf,err),(carTar->MaxVel)),
+		ABS_CLAMP_MAX(__Realize_PID(&dispid->lb,err),(carTar->MaxVel)),
+		ABS_CLAMP_MAX(__Realize_PID(&dispid->rb,err),(carTar->MaxVel)),
+		ABS_CLAMP_MAX(__Realize_PID(&dispid->rf,err),(carTar->MaxVel))		
 		);
 
 	return 0;
@@ -76,27 +80,24 @@ int CarSitaCalibration(SplitCarTargetParm* carTar,Car_Stat* carstat,PidWheel* si
 **			 dispid: [输入/出] 
 **/
 /* -------------------------------- end -------------------------------- */
-//extern Car_Stat carStat;
-//extern CarOrderParam OrderParam;
-//extern SplitCarTargetParm Cartar;
 int CarSitaSet(SplitCarTargetParm* carTar,Car_Stat* carstat,PidWheel* sitapid){
 	float err = (carTar->Tar_sita)-(carstat->Sita);
 	
-	
+	//判定
+	if(fastest_fabsf(err) < 0.5f){
+		carTar->DertaVel=0;//无差速
+		return 1;
+	} 
+
 	//目标速度转换
 	float dertavel = __Realize_PID(sitapid,err);
 		
-	//判定
-	if(fastest_fabsf(err) < 0.5f){
-		dertavel=0;
-		return 1;
-	} 
+	//printf("sita:%.2f err:%.2f v:%.2f\r\n",carstat->Sita,err,dertavel);
 	
-	if(carTar->MaxVel!=0)__carStatDertaVel_Update(carTar,CLAMP_MAX(dertavel,carTar->MaxVel));
-	if(carTar->MaxVel ==0)__carStatDertaVel_Update(carTar,dertavel);
+	__carStatDertaVel_Update(carTar,ABS_CLAMP_MAX(dertavel,carTar->MaxVel));
 	
-	//printf("err:%f	v:%f\r\n",err,CLAMP_MAX(dertavel,carTar->MaxVel));
 
+	
 	return 0;
 }
 
@@ -117,12 +118,11 @@ int CarDisSet(SplitCarTargetParm* carTar,Car_Stat* carstat,PidCar* dispid){
 	//判定
 	if((fastest_fabsf(err) <= 0.1f)) return 1;	
 	
-	
 	__carStatVel_Update(carTar,
-		CLAMP_MAX(__Realize_PID(&dispid->lf,err),(carTar->MaxVel)),
-		CLAMP_MAX(__Realize_PID(&dispid->lb,err),(carTar->MaxVel)),
-		CLAMP_MAX(__Realize_PID(&dispid->rb,err),(carTar->MaxVel)),
-		CLAMP_MAX(__Realize_PID(&dispid->rf,err),(carTar->MaxVel))		
+		ABS_CLAMP_MAX(__Realize_PID(&dispid->lf,err),(carTar->MaxVel)),
+		ABS_CLAMP_MAX(__Realize_PID(&dispid->lb,err),(carTar->MaxVel)),
+		ABS_CLAMP_MAX(__Realize_PID(&dispid->rb,err),(carTar->MaxVel)),
+		ABS_CLAMP_MAX(__Realize_PID(&dispid->rf,err),(carTar->MaxVel))		
 		);
 
 	return 0;
@@ -150,7 +150,7 @@ void WheelVelSet(SplitCarTargetParm* carTar,Car_Stat* carstat,PidCar* pidvel){
 	__carStat_Update(carTar);
 	
 	//printf("%f,%f\r\n",(carTar->Tar_LFvel),(carstat->motorStat.LeftFrt.vel));
-	
+
 	
 	float lf_output = __Incremental_PID(&pidvel->lf,(carTar->Tar_LFvel),(carstat->motorStat.LeftFrt.vel));
 	float lb_output = __Incremental_PID(&pidvel->lb,(carTar->Tar_LBvel),(carstat->motorStat.leftBack.vel));
@@ -197,8 +197,15 @@ float __Realize_PID(PidWheel * pid,float err)
 
 	pid->err = err;		
 	pid->err_sum += pid->err;//误差累计值 = 当前误差累计和
+	
+	float P = pid->Kp*pid->err;
+	float I = pid->Ki*pid->err_sum;
+	float D = pid->Kd*(pid->err - pid->err_last);
+	
+	I= ABS_CLAMP_MAX(fastest_fabsf(I),Integral_Limit);
+	
 	//使用PID控制 输出 = Kp*当前误差  +  Ki*误差累计值 + Kd*(当前误差-上次误差)
-	pid->output = pid->Kp*pid->err + pid->Ki*pid->err_sum + pid->Kd*(pid->err - pid->err_last);	
+	pid->output = P + I + D;	
 	//保存上次误差: 这次误差赋值给上次误差
 	pid->err_last = pid->err;
 		
@@ -223,16 +230,24 @@ float __Incremental_PID(PidWheel * pid,float target,float actual)
 	pid->target = target;
 	pid->err = pid->target - pid->actual;//当前误差=目标值-真实值   
 	
-	pid->output  += (pid->Kd*(pid->err - pid->err_last))               /* 比例环节 */
-									 + (pid->Kp * pid->err)                           /* 积分环节 */
-									 + (pid->Ki*(pid->err - 2*pid->err_last + pid->err_pre));  /* 微分环节 */ 
-    
+	
+	float P = (pid->Kp * pid->err);
+	float D = pid->Kd*(pid->err - pid->err_last);
+	float I = pid->Ki*(pid->err - 2*pid->err_last + pid->err_pre);
+	
+	I= ABS_CLAMP_MAX(fastest_fabsf(I),Integral_Limit);
+	    	
+	pid->output += P+I+D;
+
+	//	pid->output  += (pid->Kd*(pid->err - pid->err_last))               /* 比例环节 */
+//									 + (pid->Kp * pid->err)                           /* 积分环节 */
+//									 + (pid->Ki*(pid->err - 2*pid->err_last + pid->err_pre));  /* 微分环节 */
+	
+	
 	pid->err_pre=pid->err_last;                                   /* 保存上上次偏差 */
 	pid->err_last=pid->err;	                                    /* 保存上一次偏差 */
 	
-	//	float P = (pid->Kp * pid->err);
-	//	float d = pid->Kd*(pid->err - pid->err_last);
-	//	float i = pid->Ki*(pid->err - 2*pid->err_last + pid->err_pre);
+	
 	//printf("%f,%f,%f,%f,%f\r\n",actual,pid->output,P,d,i);
 
 	return pid->output;                                            /* 输出结果 */

@@ -67,17 +67,14 @@ void Motor_init(){
 //目标值重置
 void Refresh_Car(SplitCarTargetParm* carTar,CarOrderParam* orderparam){
 
-	carTar ->Tar_LBvel = 0;
-	carTar ->Tar_LFvel = 0;
-	carTar ->Tar_RBvel = 0;
-	carTar ->Tar_RFvel = 0;
-	
-	carTar ->LBvel = 0;
-	carTar ->LFvel = 0;
-	carTar ->RBvel = 0;
-	carTar ->RFvel = 0;
+	carTar->LFvel = 0;
+	carTar->LBvel = 0;
+	carTar->RFvel = 0;
+	carTar->RBvel = 0;
+
 	carTar->Tar_sita = 0;
-	
+	carTar->Tar_dis =0;
+	carTar->MaxVel = Def_Max_Vel;
 	orderparam->Order_dis=0;
 	orderparam->Order_omeiga=0;
 	orderparam->Order_vel=0;

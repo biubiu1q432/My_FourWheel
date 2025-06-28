@@ -123,10 +123,20 @@ void Error_Handler(void);
 #define pi 3.1415925
 #define wheelCircumference pi*wheelDiameter
 #define Arr 1000.0f
-#define Ts 0.03f
+#define Ts 0.02f
 #define ModeratingRatio 34.014
 #define PPR 500
 #define OnceEcNum (ModeratingRatio*PPR*4)
+
+
+//通信
+#define HEADER_CHAR '@'
+#define FOOTER_CHAR '#'
+
+
+//限幅
+#define Integral_Limit 3
+#define Def_Max_Vel 25.f
 
 
 //电机位置

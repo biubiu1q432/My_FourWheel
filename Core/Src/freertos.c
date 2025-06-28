@@ -255,10 +255,11 @@ void StartDefaultTask(void *argument)
     /* Infinite loop */
     for(;;)
     {
+		
+		
+		//printf("dis:%.1f	tar:%.1f	v:%f\r\n",carStat.Dis,Cartar.Tar_dis,Cartar.Tar_LBvel);
 
-			//printf("abs:%f		base:%f	rev:%f	  	tar:%f\r\n",carStat.AbsSita,carStat.baseSita,carStat.Sita,Cartar.Tar_sita);
 	
-				
 		HAL_GPIO_TogglePin(LED_GPIO_Port,LED_Pin);
         osDelay(50);
     }
@@ -281,12 +282,13 @@ void MoveControl(void *argument)
 	static  int MoveReadyCnt=0;
 	static int CntFlag=1;
 	
-    const TickType_t xFrequency = pdMS_TO_TICKS(Ts*1000); // 10ms周期
+	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+	const TickType_t xFrequency = pdMS_TO_TICKS(Ts*1000); // 10ms周期
 	const TickType_t xDelay = pdMS_TO_TICKS(1000); // 延迟1000毫秒
 	
     PidMlpi_Param_Init(&pidvel,1.2,0.1,1.2);
-    PidMlpi_Param_Init(&piddis,1.5,0.0001,10);
-    PidParam_Init(&pidsita,0.515,0.0001,1.5);
+    PidMlpi_Param_Init(&piddis,4,0.1,5);
+    PidParam_Init(&pidsita,4,0.1,2);
 
     LOWPASS_FILTER_Init(&velFilter, 0.01);
 	
@@ -295,31 +297,23 @@ void MoveControl(void *argument)
     }
 		
 	TickType_t xLastWakeTime = xTaskGetTickCount();
+	
+		
     /* Infinite loop */
     for(;;)
-    {		
-						
+    {				
+	
 		MoveReadyCnt+=1;
 		if(MoveReadyCnt>=100 && (CntFlag != 0)){
-				
-//				TASKNUM = AheadSpDis;
-//				Cartar.MaxVel = 20;
-//				Cartar.Tar_dis = 100;
-			
-//				Cartar.LBvel=-10;
-//				Cartar.LFvel=-10;
-//				Cartar.RBvel=-10;
-//				Cartar.RFvel=-10;
-
 				printf("READY!\r\n");		
 				MoveReadyCnt =0;
 				CntFlag =0;
+			
 		}
 		
 		/*逆运动学解算*/
 		CarInv_Kinematics(&carStat);
 		
-
 		/*角度环*/
         SitaOverFlag = CarSitaSet(&Cartar,&carStat,&pidsita);
 		
@@ -327,7 +321,14 @@ void MoveControl(void *argument)
         if(TASKNUM == AheadSpDis) {
             TaskOverFlag = CarDisSet(&Cartar,&carStat,&piddis);
 			if(TaskOverFlag) {
-                printf("AheadSpDis TASK OVER !\r\n");
+				//唤醒 OdarGet
+				xTaskNotifyFromISR(
+					DataSendTaskHandle,     
+					0,
+					eNoAction, 			
+					&xHigherPriorityTaskWoken
+				);
+				
 				TASKNUM = Free;
             }
         }
@@ -336,7 +337,15 @@ void MoveControl(void *argument)
         else if(TASKNUM == RotateSpAngle) {
             if(SitaOverFlag) {
                 TaskOverFlag = 1;
-				printf("RotateSpAngle TASK OVER !\r\n");
+				
+				//唤醒 OdarGet
+				xTaskNotifyFromISR(
+					DataSendTaskHandle,     
+					0,
+					eNoAction, 			
+					&xHigherPriorityTaskWoken
+				);
+				
 				BaseSitaUpdate(&carStat,&Cartar);//坐标系重置
 				TASKNUM = Free;
             }
@@ -349,7 +358,15 @@ void MoveControl(void *argument)
 			if(TaskOverFlag) {
 				LidarUart_ISREN(0);
 				
-				printf("CalibraDis TASK OVER !\r\n");
+				//唤醒 OdarGet
+				xTaskNotifyFromISR(
+					DataSendTaskHandle,     
+					0,
+					eNoAction, 			
+					&xHigherPriorityTaskWoken
+				);
+				
+				//printf("CalibraDis TASK OVER !\r\n");
 				BaseSitaUpdate(&carStat,&Cartar);//坐标系重置
 				TASKNUM = Free;
 				
@@ -365,11 +382,19 @@ void MoveControl(void *argument)
 			carStat.CalibrationDis = distance;
 			float err = Cartar.Tar_dis-carStat.CalibrationDis;
 
-
 			TaskOverFlag = CarSitaCalibration(&Cartar,&carStat,&pidsita);
 			if(TaskOverFlag) {
 				LidarUart_ISREN(0);
-				printf("CalibraAngle TASK OVER !\r\n");
+				
+				//唤醒 OdarGet
+				xTaskNotifyFromISR(
+					DataSendTaskHandle,     
+					0,
+					eNoAction, 			
+					&xHigherPriorityTaskWoken
+				);
+				
+				//printf("CalibraAngle TASK OVER !\r\n");
 				BaseSitaUpdate(&carStat,&Cartar);//坐标系重置
 				TASKNUM = Free;
 			}
@@ -378,69 +403,9 @@ void MoveControl(void *argument)
 		
 		/*空闲*/
         if(TASKNUM==Free) {
-            Refresh_CarDis(&carStat);
+			Refresh_CarDis(&carStat);
 			Refresh_Car(&Cartar,&OrderParam);
         }
-
-
-
-//		switch(TASKNUM) {
-//			/* 指定距离，前进 */
-//			case AheadSpDis:
-//				TaskOverFlag = CarDisSet(&Cartar, &carStat, &piddis);
-//				if(TaskOverFlag) {
-//					printf("AheadSpDis TASK OVER !\r\n");
-//					TASKNUM = Free;
-//				}
-//				break;
-//			
-//			/* 旋转指定角度 */
-//			case RotateSpAngle:
-//				if(SitaOverFlag) {
-//					TaskOverFlag = 1;
-//					printf("RotateSpAngle TASK OVER !\r\n");
-//					BaseSitaUpdate(&carStat, &Cartar);  // 坐标系重置
-//					TASKNUM = Free;
-//				}
-//				break;
-//			
-//			/* 纵向标定 */
-//			case CalibraDis:
-//				carStat.CalibrationDis = distance;
-//				TaskOverFlag = CarDisCalibration(&Cartar, &carStat, &piddis);
-//				if(TaskOverFlag) {
-//					LidarUart_ISREN(0);
-//					printf("CalibraDis TASK OVER !\r\n");
-//					BaseSitaUpdate(&carStat, &Cartar);  // 坐标系重置
-//					TASKNUM = Free;
-//				}
-//				break;
-//			
-//			/* 角度横向标定 */
-//			case CalibraAngle:
-//				carStat.CalibrationDis = distance;
-//				float err = Cartar.Tar_dis - carStat.CalibrationDis;
-//				// 粗调逻辑（原注释保留）
-//				TaskOverFlag = CarSitaCalibration(&Cartar, &carStat, &pidsita);
-//				if(TaskOverFlag) {
-//					LidarUart_ISREN(0);
-//					printf("CalibraAngle TASK OVER !\r\n");
-//					BaseSitaUpdate(&carStat, &Cartar);  // 坐标系重置
-//					TASKNUM = Free;
-//				}
-//				break;
-//			
-//			/* 空闲状态 */
-//			case Free:
-//				Refresh_CarDis(&carStat);
-//				Refresh_Car(&Cartar, &OrderParam);
-//				break;
-//				
-//			default:
-//				// 可选：处理未定义的任务编号
-//				break;
-//		}
-
 		
 		WheelVelSet(&Cartar,&carStat,&pidvel);
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
@@ -483,6 +448,7 @@ void ReadMpu(void *argument)
             if(s_cDataUpdate & ANGLE_UPDATE) {
                 s_cDataUpdate &= ~ANGLE_UPDATE;
 				
+			
 				carStat.AbsSita = fAngle[2];//绝对
 				carStat.Sita = normalizeYaw(fAngle[2] - carStat.baseSita);//相对
             }
@@ -494,7 +460,7 @@ void ReadMpu(void *argument)
 			CntFlag =0;
 		} 
         
-		osDelay(25);
+		osDelay(20);
     }
   /* USER CODE END ReadMpu */
 }
@@ -510,9 +476,7 @@ void OdarGet(void *argument)
 {
   /* USER CODE BEGIN OdarGet */
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-	#define HEADER_CHAR '@'
-	#define FOOTER_CHAR '#'
-   
+
 	/* Infinite loop */
     for(;;)
     {
@@ -571,7 +535,7 @@ void OdarGet(void *argument)
         }
  
         // 任务可用性检查
-        if(!TaskOverFlag) {
+        if(TASKNUM!=Free) {
             printf("ERR: Task busy, wait for completion!\r\n");
             continue;
         }
@@ -632,108 +596,7 @@ void OdarGet(void *argument)
                 printf("ERR: NO THIS TASK! %d\r\n", Task_type);
                 break;
         }		
-		
-/*====================无帧检验====================*/		
-//        char task_seg[3];
-//        float value1, value2;
-//        sscanf(ORDER_DATA, "%[^|]|%f|%f", task_seg, &value1, &value2);
 
-//        if(!TaskOverFlag) {
-//            printf("undone!,wait for it\r\n");
-//        }
-
-//        else if((strcmp(task_seg, "1") == 0)) {
-//            TaskOverFlag =0;
-//			
-//			OrderParam.Order_vel  = value1;
-//            OrderParam.Order_omeiga = value2;
-//            TASKNUM = Nav2Interfaces;
-//            
-//			Refresh_CarDis(&carStat);//距离重置
-//            Split_CarTarParam(&Cartar,&OrderParam);//任务分解
-//        }
-
-//        else if((strcmp(task_seg, "2") == 0)) {
-//            TaskOverFlag =0;
-
-//            printf("[TASK2] val:%f	dis:%f\r\n",value1,value2);
-
-//            OrderParam.Order_MAXvel  = value1;
-//            OrderParam.Order_dis =  value2;
-//            TASKNUM = AheadSpDis;
-//            
-//			Refresh_CarDis(&carStat);//距离重置
-//            Split_CarTarParam(&Cartar,&OrderParam);//任务分解
-//        }
-
-//        else if((strcmp(task_seg, "3") == 0)) {
-
-//			printf("[TASK3] tarSita: %f		MAXvel:	%f\r\n",value2,value1);
-//			if(fabs(value2)<=180){
-//				TaskOverFlag =0;
-//				OrderParam.Order_MAXvel =value1;
-//				OrderParam.Order_sita = value2;
-//				TASKNUM = RotateSpAngle;
-//				
-//				Refresh_CarDis(&carStat);//距离重置
-//				Split_CarTarParam(&Cartar,&OrderParam);
-//			
-//			}
-//			
-//			else{
-//				printf("angle error!\r\n");	
-//			}
-//		
-//			
-//        }
-//		
-//        else if((strcmp(task_seg, "4") == 0)) {
-//			TaskOverFlag =0;
-
-//			
-//			printf("[TASK4] CalibrationDis: %f\r\n",value1);
-//            OrderParam.Order_dis = value1;
-//            TASKNUM = CalibraDis;
-//      
-//			Refresh_CarDis(&carStat);//距离重置
-//            Split_CarTarParam(&Cartar,&OrderParam);
-//			
-//			//LidarUart_ISREN(1);//使能激光串口				
-////			xTaskNotifyFromISR(
-////				LidarCaliTaskHandle,    
-////				0,
-////				eNoAction, 			
-////				&xHigherPriorityTaskWoken
-////			);
-//        
-//		}
-//		
-//		
-//        else if((strcmp(task_seg, "5") == 0)) {
-//			TaskOverFlag =0;
-
-//		
-//			printf("[TASK3] CalibrationDis: %f\r\n",value1);
-//            OrderParam.Order_dis = value1;
-//            TASKNUM = CalibraAngle;
-//			
-//			Refresh_CarDis(&carStat);//距离重置
-//            Split_CarTarParam(&Cartar,&OrderParam);
-//			
-//			LidarUart_ISREN(1);//使能激光串口				
-////			xTaskNotifyFromISR(
-////				LidarCaliTaskHandle,    
-////				0,
-////				eNoAction, 			
-////				&xHigherPriorityTaskWoken
-////			);
-//        
-//		}
-//		
-//        else {
-//            printf("COMMOND ERROR\r\n");
-//        }
-/*====================无帧检验====================*/		
 
     }
   /* USER CODE END OdarGet */
@@ -750,28 +613,27 @@ void DataSend(void *argument)
 {
   /* USER CODE BEGIN DataSend */
     uint8_t buffer[4];
-    uint8_t Done[] = "Done";
+    uint8_t Done[] = "Done\r\n";
     /* Infinite loop */
     for(;;)
     {
+        // 阻塞等待通知
+        ulTaskNotifyTake(            
+            pdTRUE,                  
+            portMAX_DELAY           
+        );
 
-//        // 阻塞等待通知
-//        ulTaskNotifyTake(            // 比xTaskNotifyWait更简洁
-//            pdTRUE,                  // 退出时清零通知值
-//            portMAX_DELAY            // 无限等待
-//        );
-
-//        //DONE
-//        if(TaskOverFlag) {
-//            HAL_UART_Transmit_DMA(&huart3,Done,sizeof(Done));
-//            TaskOverFlag = 0;
-//        }
+        //DONE
+        if(TaskOverFlag) {
+            HAL_UART_Transmit_DMA(&huart3,Done,sizeof(Done));
+            TaskOverFlag = 0;
+        }
 		
-		osDelay(200);
 
     }
   /* USER CODE END DataSend */
 }
+
 
 /* USER CODE BEGIN Header_ReadLidar */
 /**
@@ -799,7 +661,6 @@ void ReadLidar(void *argument)
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
-
 
 /*ISR*/
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
@@ -1023,6 +884,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	
 }
 
+
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     //命令接收中断DMA
@@ -1040,13 +902,15 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
         portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
     }
 }
-/*ISR*/
+
 
 
 static void BaseSitaUpdate(Car_Stat* carStat,SplitCarTargetParm* Cartar){
 	carStat->baseSita += Cartar->Tar_sita;
 	carStat->baseSita = normalizeYaw(carStat->baseSita);
 }
+
+
 
 /**
  * @brief 将Yaw角规范化到[-180°, 180°]范围
@@ -1070,6 +934,7 @@ static float normalizeYaw(float yaw) {
     return yaw;
 }
 
+
 static float MpuYawInit(int cnt) {
     float init_yaw = 0;
     float fAngle[3];
@@ -1089,6 +954,7 @@ static float MpuYawInit(int cnt) {
     return init_yaw;
 
 }
+
 
 
 void CopeCmdData(unsigned char ucData)
@@ -1116,6 +982,7 @@ void CopeCmdData(unsigned char ucData)
     }
 
 }
+
 
 
 static void CmdProcess(void)
