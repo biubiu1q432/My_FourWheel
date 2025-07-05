@@ -135,7 +135,7 @@ void Error_Handler(void);
 
 
 //限幅
-#define Integral_Limit 3
+#define Integral_Limit 100
 #define Def_Max_Vel 25.f
 
 

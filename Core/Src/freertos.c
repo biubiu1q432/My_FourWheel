@@ -286,11 +286,11 @@ void MoveControl(void *argument)
 	const TickType_t xFrequency = pdMS_TO_TICKS(Ts*1000); // 10ms周期
 	const TickType_t xDelay = pdMS_TO_TICKS(1000); // 延迟1000毫秒
 	
-    PidMlpi_Param_Init(&pidvel,1.2,0.1,1.2);
-    PidMlpi_Param_Init(&piddis,4,0.1,5);
-    PidParam_Init(&pidsita,4,0.1,2);
+    PidMlpi_Param_Init(&pidvel,1.4,0.1,1.2);
+    PidMlpi_Param_Init(&piddis,4,0.00,0);
+    PidParam_Init(&pidsita,4.5,0.001,0);
 
-    LOWPASS_FILTER_Init(&velFilter, 0.01);
+    //LOWPASS_FILTER_Init(&velFilter, 0.01);
 	
     while(mpuFlag){
 		vTaskDelay(xDelay);
@@ -304,11 +304,10 @@ void MoveControl(void *argument)
     {				
 	
 		MoveReadyCnt+=1;
-		if(MoveReadyCnt>=100 && (CntFlag != 0)){
-				printf("READY!\r\n");		
+		if(MoveReadyCnt>=50 && (CntFlag != 0)){
+				printf("READY\r\n");		
 				MoveReadyCnt =0;
-				CntFlag =0;
-			
+				CntFlag =0;	
 		}
 		
 		/*逆运动学解算*/
@@ -393,8 +392,6 @@ void MoveControl(void *argument)
 					eNoAction, 			
 					&xHigherPriorityTaskWoken
 				);
-				
-				//printf("CalibraAngle TASK OVER !\r\n");
 				BaseSitaUpdate(&carStat,&Cartar);//坐标系重置
 				TASKNUM = Free;
 			}

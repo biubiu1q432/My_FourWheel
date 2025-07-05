@@ -191,10 +191,13 @@ void PidParam_Init(PidWheel* pid,float kp,float ki,float kd){
 @para	：当前位置	pid->actual_dis
 @return: 指定速度	pid->output_val
 **************************************************************************/
+int cnt = 0;
 
 float __Realize_PID(PidWheel * pid,float err)
 {
 
+	cnt+=1;
+	
 	pid->err = err;		
 	pid->err_sum += pid->err;//误差累计值 = 当前误差累计和
 	
@@ -202,7 +205,14 @@ float __Realize_PID(PidWheel * pid,float err)
 	float I = pid->Ki*pid->err_sum;
 	float D = pid->Kd*(pid->err - pid->err_last);
 	
-	I= ABS_CLAMP_MAX(fastest_fabsf(I),Integral_Limit);
+    I = ABS_CLAMP_MAX(I, Integral_Limit);
+	
+//	if(cnt%4 ==0 ){
+//		
+//		//printf("%.2f	%.2f\r\n",pid->err,pid->err_last);
+//		printf("%.1f  %.1f  %.1f %.1f  %.1f\r\n",err,P,I,D,(P + I + D));
+//		cnt = 0;
+//	}
 	
 	//使用PID控制 输出 = Kp*当前误差  +  Ki*误差累计值 + Kd*(当前误差-上次误差)
 	pid->output = P + I + D;	
