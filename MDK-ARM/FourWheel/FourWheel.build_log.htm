@@ -27,44 +27,7 @@ Project File Date:  07/22/2025
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 5 (build 528)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
 Build target 'FourWheel'
-compiling freertos.c...
-../Core/Src/freertos.c(304): warning:  #177-D: variable "xHigherPriorityTaskWoken"  was declared but never referenced
-      BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-../Core/Src/freertos.c(433): warning:  #177-D: variable "yaw"  was declared but never referenced
-      float yaw;
-../Core/Src/freertos.c(434): warning:  #177-D: variable "fAcc"  was declared but never referenced
-      float fAcc[3], fGyro[3], fAngle[3];
-../Core/Src/freertos.c(434): warning:  #177-D: variable "fGyro"  was declared but never referenced
-      float fAcc[3], fGyro[3], fAngle[3];
-../Core/Src/freertos.c(435): warning:  #177-D: variable "i"  was declared but never referenced
-      int i;
-../Core/Src/freertos.c(485): warning:  #177-D: variable "xHigherPriorityTaskWoken"  was declared but never referenced
-      BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-../Core/Src/freertos.c(650): warning:  #177-D: variable "floatStr"  was declared but never referenced
-      char floatStr[5] = {0};
-../Core/Src/freertos.c(734): warning:  #167-D: argument of type "char *" is incompatible with parameter of type "uint8_t *"
-          HAL_UART_Receive_IT(&huart2,&mpu_tmp,1);
-../Core/Src/freertos.c(1226): warning:  #177-D: function "SendData"  was declared but never referenced
-  static void SendData(float value) {
-../Core/Src/freertos.c(1238): warning:  #177-D: function "Debug_Acutal_Dis"  was declared but never referenced
-  static void Debug_Acutal_Dis() {
-../Core/Src/freertos.c(1242): warning:  #177-D: function "Debug_Tar_Dis"  was declared but never referenced
-  static void Debug_Tar_Dis() {
-../Core/Src/freertos.c(1251): warning:  #177-D: function "Debug_Acutal_Vel"  was declared but never referenced
-  static void Debug_Acutal_Vel() {
-../Core/Src/freertos.c(1258): warning:  #177-D: function "Debug_Tar_Vel"  was declared but never referenced
-  static void Debug_Tar_Vel() {
-../Core/Src/freertos.c(1266): warning:  #177-D: function "Debug_mpu"  was declared but never referenced
-  static void Debug_mpu() {
-../Core/Src/freertos.c(1270): warning:  #177-D: function "Debug_Odom"  was declared but never referenced
-  static void Debug_Odom() {
-../Core/Src/freertos.c(1284): warning:  #177-D: function "Debug_taskStat"  was declared but never referenced
-  static void Debug_taskStat() {
-../Core/Src/freertos.c: 16 warnings, 0 errors
-linking...
-Program Size: Code=36020 RO-data=1408 RW-data=304 ZI-data=22624  
-FromELF: creating hex file...
-"FourWheel\FourWheel.axf" - 0 Error(s), 16 Warning(s).
+"FourWheel\FourWheel.axf" - 0 Error(s), 0 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -87,7 +50,7 @@ Package Vendor: Keil
 <h2>Collection of Component Files used:</h2>
 
    * Component: ARM::CMSIS:CORE:5.0.1
-Build Time Elapsed:  00:00:04
+Build Time Elapsed:  00:00:01
 </pre>
 </body>
 </html>

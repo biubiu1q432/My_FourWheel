@@ -126,49 +126,49 @@ volatile int mpuFlag=1;
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
-    .name = "defaultTask",
-    .stack_size = 128 * 4,
-    .priority = (osPriority_t) osPriorityLow,
+  .name = "defaultTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for MoveControlTask */
 osThreadId_t MoveControlTaskHandle;
 const osThreadAttr_t MoveControlTask_attributes = {
-    .name = "MoveControlTask",
-    .stack_size = 256 * 4,
-    .priority = (osPriority_t) osPriorityAboveNormal,
+  .name = "MoveControlTask",
+  .stack_size = 256 * 4,
+  .priority = (osPriority_t) osPriorityAboveNormal,
 };
 /* Definitions for ReadMpuTask */
 osThreadId_t ReadMpuTaskHandle;
 const osThreadAttr_t ReadMpuTask_attributes = {
-    .name = "ReadMpuTask",
-    .stack_size = 256 * 4,
-    .priority = (osPriority_t) osPriorityNormal7,
+  .name = "ReadMpuTask",
+  .stack_size = 256 * 4,
+  .priority = (osPriority_t) osPriorityNormal7,
 };
 /* Definitions for OdarGetTask */
 osThreadId_t OdarGetTaskHandle;
 const osThreadAttr_t OdarGetTask_attributes = {
-    .name = "OdarGetTask",
-    .stack_size = 256 * 4,
-    .priority = (osPriority_t) osPriorityNormal,
+  .name = "OdarGetTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityHigh,
 };
 /* Definitions for LidarCaliTask */
 osThreadId_t LidarCaliTaskHandle;
 const osThreadAttr_t LidarCaliTask_attributes = {
-    .name = "LidarCaliTask",
-    .stack_size = 128 * 4,
-    .priority = (osPriority_t) osPriorityBelowNormal,
+  .name = "LidarCaliTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityBelowNormal,
 };
 /* Definitions for DataSendTask */
 osThreadId_t DataSendTaskHandle;
 const osThreadAttr_t DataSendTask_attributes = {
-    .name = "DataSendTask",
-    .stack_size = 128 * 4,
-    .priority = (osPriority_t) osPriorityNormal,
+  .name = "DataSendTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityHigh,
 };
 /* Definitions for AnlayOderDataFlag */
 osSemaphoreId_t AnlayOderDataFlagHandle;
 const osSemaphoreAttr_t AnlayOderDataFlag_attributes = {
-    .name = "AnlayOderDataFlag"
+  .name = "AnlayOderDataFlag"
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -208,56 +208,56 @@ __weak unsigned long getRunTimeCounterValue(void)
   * @retval None
   */
 void MX_FREERTOS_Init(void) {
-    /* USER CODE BEGIN Init */
+  /* USER CODE BEGIN Init */
 
-    /* USER CODE END Init */
+  /* USER CODE END Init */
 
-    /* USER CODE BEGIN RTOS_MUTEX */
+  /* USER CODE BEGIN RTOS_MUTEX */
     /* add mutexes, ... */
-    /* USER CODE END RTOS_MUTEX */
+  /* USER CODE END RTOS_MUTEX */
 
-    /* Create the semaphores(s) */
-    /* creation of AnlayOderDataFlag */
-    AnlayOderDataFlagHandle = osSemaphoreNew(1, 1, &AnlayOderDataFlag_attributes);
+  /* Create the semaphores(s) */
+  /* creation of AnlayOderDataFlag */
+  AnlayOderDataFlagHandle = osSemaphoreNew(1, 1, &AnlayOderDataFlag_attributes);
 
-    /* USER CODE BEGIN RTOS_SEMAPHORES */
+  /* USER CODE BEGIN RTOS_SEMAPHORES */
     /* add semaphores, ... */
-    /* USER CODE END RTOS_SEMAPHORES */
+  /* USER CODE END RTOS_SEMAPHORES */
 
-    /* USER CODE BEGIN RTOS_TIMERS */
+  /* USER CODE BEGIN RTOS_TIMERS */
     /* start timers, add new ones, ... */
-    /* USER CODE END RTOS_TIMERS */
+  /* USER CODE END RTOS_TIMERS */
 
-    /* USER CODE BEGIN RTOS_QUEUES */
+  /* USER CODE BEGIN RTOS_QUEUES */
     /* add queues, ... */
-    /* USER CODE END RTOS_QUEUES */
+  /* USER CODE END RTOS_QUEUES */
 
-    /* Create the thread(s) */
-    /* creation of defaultTask */
-    defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  /* Create the thread(s) */
+  /* creation of defaultTask */
+  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
-    /* creation of MoveControlTask */
-    MoveControlTaskHandle = osThreadNew(MoveControl, NULL, &MoveControlTask_attributes);
+  /* creation of MoveControlTask */
+  MoveControlTaskHandle = osThreadNew(MoveControl, NULL, &MoveControlTask_attributes);
 
-    /* creation of ReadMpuTask */
-    ReadMpuTaskHandle = osThreadNew(ReadMpu, NULL, &ReadMpuTask_attributes);
+  /* creation of ReadMpuTask */
+  ReadMpuTaskHandle = osThreadNew(ReadMpu, NULL, &ReadMpuTask_attributes);
 
-    /* creation of OdarGetTask */
-    OdarGetTaskHandle = osThreadNew(OdarGet, NULL, &OdarGetTask_attributes);
+  /* creation of OdarGetTask */
+  OdarGetTaskHandle = osThreadNew(OdarGet, NULL, &OdarGetTask_attributes);
 
-    /* creation of LidarCaliTask */
-    LidarCaliTaskHandle = osThreadNew(ReadLidar, NULL, &LidarCaliTask_attributes);
+  /* creation of LidarCaliTask */
+  LidarCaliTaskHandle = osThreadNew(ReadLidar, NULL, &LidarCaliTask_attributes);
 
-    /* creation of DataSendTask */
-    DataSendTaskHandle = osThreadNew(DataSend, NULL, &DataSendTask_attributes);
+  /* creation of DataSendTask */
+  DataSendTaskHandle = osThreadNew(DataSend, NULL, &DataSendTask_attributes);
 
-    /* USER CODE BEGIN RTOS_THREADS */
+  /* USER CODE BEGIN RTOS_THREADS */
     /* add threads, ... */
-    /* USER CODE END RTOS_THREADS */
+  /* USER CODE END RTOS_THREADS */
 
-    /* USER CODE BEGIN RTOS_EVENTS */
+  /* USER CODE BEGIN RTOS_EVENTS */
     /* add events, ... */
-    /* USER CODE END RTOS_EVENTS */
+  /* USER CODE END RTOS_EVENTS */
 
 }
 
@@ -270,7 +270,7 @@ void MX_FREERTOS_Init(void) {
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void *argument)
 {
-    /* USER CODE BEGIN StartDefaultTask */
+  /* USER CODE BEGIN StartDefaultTask */
 
     /* Infinite loop */
     for(;;)
@@ -281,7 +281,7 @@ void StartDefaultTask(void *argument)
         HAL_GPIO_TogglePin(LED_GPIO_Port,LED_Pin);
         osDelay(80);
     }
-    /* USER CODE END StartDefaultTask */
+  /* USER CODE END StartDefaultTask */
 }
 
 /* USER CODE BEGIN Header_MoveControl */
@@ -293,7 +293,7 @@ void StartDefaultTask(void *argument)
 /* USER CODE END Header_MoveControl */
 void MoveControl(void *argument)
 {
-    /* USER CODE BEGIN MoveControl */
+  /* USER CODE BEGIN MoveControl */
     TASKNUM =Free;
     Cartar.MaxVel = Def_Max_Vel;
 
@@ -341,13 +341,10 @@ void MoveControl(void *argument)
             TaskOverFlag = CarDisSet(&Cartar,&carStat,&piddis);
 
             if(TaskOverFlag) {
-                xTaskNotify(
-                    DataSendTaskHandle,
-                    0,
-                    eNoAction
-                );
-
                 TASKNUM = Free;
+
+                xTaskNotifyGive(DataSendTaskHandle);
+
             }
         }
 
@@ -355,16 +352,10 @@ void MoveControl(void *argument)
         else if(TASKNUM == RotateSpAngle) {
             if(SitaOverFlag) {
                 TaskOverFlag = 1;
-
-                xTaskNotify(
-                    DataSendTaskHandle,
-                    0,
-                    eNoAction
-                );
-
-
                 BaseSitaUpdate(&carStat,&Cartar);//坐标系重置
                 TASKNUM = Free;
+
+                xTaskNotifyGive(DataSendTaskHandle);
             }
         }
 
@@ -373,21 +364,13 @@ void MoveControl(void *argument)
             TaskOverFlag = CarDisCalibration(&Cartar,&carStat,&pidCalidis);
 
             if(TaskOverFlag) {
-
                 EnUpLidarDisRead = 0;
                 EnUpLidarDisTask = 0;
                 TASKNUM = Free;
 
-                xTaskNotify(
-                    DataSendTaskHandle,
-                    0,
-                    eNoAction
-                );
-
-
+                xTaskNotifyGive(DataSendTaskHandle);
 
             }
-
         }
 
         /*角度横向标定*/
@@ -395,17 +378,12 @@ void MoveControl(void *argument)
             TaskOverFlag = CarSitaCalibration(&Cartar,&carStat,&pidsita);
             if(TaskOverFlag) {
                 LidarUart_ISREN(0);
-
-                xTaskNotify(
-                    DataSendTaskHandle,
-                    0,
-                    eNoAction
-                );
-
                 BaseSitaUpdate(&carStat,&Cartar);//坐标系重置
                 TASKNUM = Free;
-            }
 
+                xTaskNotifyGive(DataSendTaskHandle);
+
+            }
         }
 
         /*空闲*/
@@ -417,7 +395,7 @@ void MoveControl(void *argument)
         WheelVelSet(&Cartar,&carStat,&pidvel);
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
     }
-    /* USER CODE END MoveControl */
+  /* USER CODE END MoveControl */
 }
 
 /* USER CODE BEGIN Header_ReadMpu */
@@ -429,7 +407,7 @@ void MoveControl(void *argument)
 /* USER CODE END Header_ReadMpu */
 void ReadMpu(void *argument)
 {
-    /* USER CODE BEGIN ReadMpu */
+  /* USER CODE BEGIN ReadMpu */
     float yaw;
     float fAcc[3], fGyro[3], fAngle[3];
     int i;
@@ -469,7 +447,7 @@ void ReadMpu(void *argument)
 
         osDelay(15);
     }
-    /* USER CODE END ReadMpu */
+  /* USER CODE END ReadMpu */
 }
 
 /* USER CODE BEGIN Header_OdarGet */
@@ -481,7 +459,7 @@ void ReadMpu(void *argument)
 /* USER CODE END Header_OdarGet */
 void OdarGet(void *argument)
 {
-    /* USER CODE BEGIN OdarGet */
+  /* USER CODE BEGIN OdarGet */
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
 
@@ -494,12 +472,10 @@ void OdarGet(void *argument)
         //指令3:  指定角度	max_v:sita
         //指令4： 距离标定	dis
         //指令5： 角度标定  dis
+
+
+
         if(xSemaphoreTake(AnlayOderDataFlagHandle, portMAX_DELAY) == pdTRUE) {
-
-
-            printf("OdarGet\r\n");
-
-
             // 检查最小有效长度：帧头 + | + 命令号 + 2个参数 + 帧尾
             size_t data_len = strlen((char*)ORDER_DATA);
             if(data_len < 6) {  // 最小如：@|1|0|0|#
@@ -546,12 +522,10 @@ void OdarGet(void *argument)
                 continue;
             }
 
-
             TaskOverFlag = 0;
             ResponseLidarGet = 0;
             EnUpLidarDisRead = 0;
             EnUpLidarDisTask = 0;
-
 
             switch(Task_type) {
             case 1: // 指定v,w: v,w
@@ -594,18 +568,8 @@ void OdarGet(void *argument)
                 Split_CarTarParam(&Cartar, &OrderParam);
 
                 TASKNUM = CalibraDis;
-
-
-                //EnUpLidarDisRead = 1;//使能上位机lidar接收线程启动
-
-
-                //唤醒DataSend响应lidar
                 ResponseLidarGet= 1;
-                xTaskNotify(
-                    DataSendTaskHandle,
-                    0,
-                    eNoAction
-                );
+                xTaskNotifyGive(DataSendTaskHandle);
                 break;
 
             case 5: // 角度标定: dis
@@ -621,20 +585,13 @@ void OdarGet(void *argument)
                 printf("ERR: NO THIS TASK! %d\r\n", Task_type);
                 break;
             }
-
-
         }
 
-//
-//        // 阻塞等待通知
-//        ulTaskNotifyTake(            // 比xTaskNotifyWait更简洁
-//            pdTRUE,                  // 退出时清零通知值
-//            portMAX_DELAY            // 无限等待
-//        );
+
 
 
     }
-    /* USER CODE END OdarGet */
+  /* USER CODE END OdarGet */
 }
 
 /* USER CODE BEGIN Header_ReadLidar */
@@ -646,7 +603,7 @@ void OdarGet(void *argument)
 /* USER CODE END Header_ReadLidar */
 void ReadLidar(void *argument)
 {
-    /* USER CODE BEGIN ReadLidar */
+  /* USER CODE BEGIN ReadLidar */
     char floatStr[5] = {0};
     long cnt = 0;
 
@@ -679,7 +636,7 @@ void ReadLidar(void *argument)
         }
 
     }
-    /* USER CODE END ReadLidar */
+  /* USER CODE END ReadLidar */
 }
 
 /* USER CODE BEGIN Header_DataSend */
@@ -691,7 +648,7 @@ void ReadLidar(void *argument)
 /* USER CODE END Header_DataSend */
 void DataSend(void *argument)
 {
-    /* USER CODE BEGIN DataSend */
+  /* USER CODE BEGIN DataSend */
 
     uint8_t Done[] = "Done\r\n";
     uint8_t UpLidarAllowStart[] = "UpLidarAllowStart\r\n";
@@ -719,7 +676,7 @@ void DataSend(void *argument)
             EnUpLidarDisRead = 1;
         }
     }
-    /* USER CODE END DataSend */
+  /* USER CODE END DataSend */
 }
 
 /* Private application code --------------------------------------------------*/
@@ -953,15 +910,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 
 
 
-
-
-
-
-
-
-
-
-
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
@@ -970,32 +918,15 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
         HAL_UARTEx_ReceiveToIdle_DMA(&huart3,ORDER_DATA,sizeof(ORDER_DATA));
         __HAL_DMA_DISABLE_IT(&hdma_usart3_rx,DMA_IT_HT);
 
-
         //lidar
         if((ORDER_DATA[0] == '|')) {
-
-            printf("6\r\n");
-
-            xTaskNotifyFromISR(
-                LidarCaliTaskHandle,     // 目标任务句柄
-                0,
-                eNoAction, 			// 仅唤醒
-                &xHigherPriorityTaskWoken
-            );
+            vTaskNotifyGiveFromISR(LidarCaliTaskHandle,&xHigherPriorityTaskWoken);
             portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 
         }
 
         else if(ORDER_DATA[0] == '@') {
-            printf("7\r\n");
             xSemaphoreGiveFromISR(AnlayOderDataFlagHandle, &xHigherPriorityTaskWoken);
-
-//            xTaskNotifyFromISR(
-//                OdarGetTaskHandle,     // 目标任务句柄
-//                0,
-//                eNoAction, 			// 仅唤醒
-//                &xHigherPriorityTaskWoken
-//            );
             portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
         }
 
