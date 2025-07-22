@@ -110,11 +110,13 @@ int main(void)
   MX_TIM11_Init();
   MX_USART3_UART_Init();
   MX_USART2_UART_Init();
+  MX_UART4_Init();
   /* USER CODE BEGIN 2 */
-   
-	Motor_init();
-	HAL_UARTEx_ReceiveToIdle_DMA(&huart3,ORDER_DATA,sizeof(ORDER_DATA));//SERIAL
+
+    Motor_init();
+    HAL_UARTEx_ReceiveToIdle_DMA(&huart3,ORDER_DATA,sizeof(ORDER_DATA));//SERIAL
     __HAL_DMA_DISABLE_IT(&hdma_usart3_rx,DMA_IT_HT);
+
 
   /* USER CODE END 2 */
 

@@ -31,7 +31,9 @@ typedef struct
     float Sita;//相对角度
 	float AbsSita;//绝对角度
 	float baseSita;//基准角度 
-	int CalibrationDis;//标定角度
+	float FrontLidarCaliDis;//标定
+	int SideLidarCaliDis;//标定
+
 
 	All_Motor_Stat motorStat;
 } Car_Stat;//整车参数

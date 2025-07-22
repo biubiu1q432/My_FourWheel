@@ -55,3 +55,5 @@ fourwheel\freertos.o: ../Core/Inc/usart.h
 fourwheel\freertos.o: ../HARDWARE/MPU/mpu.h
 fourwheel\freertos.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
 fourwheel\freertos.o: ../HARDWARE/MPU/REG.h
+fourwheel\freertos.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/semphr.h
+fourwheel\freertos.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h

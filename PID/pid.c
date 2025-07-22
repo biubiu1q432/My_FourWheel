@@ -1,12 +1,11 @@
 #include "pid.h"
 #include "tim.h"
 #include "math.h"
-
-
-#define ABS_CLAMP_MAX(val, abs_max) \
-    (fabsf(val) > fabsf(abs_max) ? \
-        (copysignf(fabsf(abs_max), val)) : \
-        (val))
+		
+		
+#define ABS_CLAMP(val, max_abs) \
+    ((val) > (max_abs) ? (max_abs) : \
+    ((val) < -(max_abs) ? -(max_abs) : (val)))
 		
 		
 float fastest_fabsf(float x) {
@@ -14,6 +13,11 @@ float fastest_fabsf(float x) {
     union { float f; uint32_t i; } u = { x };
     u.i &= 0x7FFFFFFF;  // 清除符号位(第31位)
     return u.f;
+}
+
+
+float roundToTwoDecimals(float num) {
+    return roundf(num * 100) / 100;  // 先乘100，四舍五入，再除100
 }
 
 
@@ -28,19 +32,53 @@ float fastest_fabsf(float x) {
 /* -------------------------------- end -------------------------------- */
 int CarDisCalibration(SplitCarTargetParm* carTar,Car_Stat* carstat,PidCar* dispid){
 	
-	//err
-	float err = carTar->Tar_dis-(carstat->CalibrationDis);
-
-	//判定
-	if((fastest_fabsf(err) <= 0.1f)) return 1;	
+	float lf,lb,rb,rf;
 	
-	__carStatVel_Update(carTar,
-		ABS_CLAMP_MAX(__Realize_PID(&dispid->lf,err),(carTar->MaxVel)),
-		ABS_CLAMP_MAX(__Realize_PID(&dispid->lb,err),(carTar->MaxVel)),
-		ABS_CLAMP_MAX(__Realize_PID(&dispid->rb,err),(carTar->MaxVel)),
-		ABS_CLAMP_MAX(__Realize_PID(&dispid->rf,err),(carTar->MaxVel))		
-		);
+	//err
+	float err = (carstat->FrontLidarCaliDis)-carTar->Tar_dis;
+	
+	
+	//判定
+	if((fastest_fabsf(err) <= 0.05f)) return 1;	
+	
+	else{
+	
+		if(err>=1){
+			lf = 30;
+			lb = 30;
+			rb = 30;
+			rf = 30;
+		}
+		else if(err<=-1) {
+			lf = -30;
+			lb = -30;
+			rb = -30;
+			rf = -30;
+			
+		}
+		else{
+			lf  = __Realize_PID(&dispid->lf,err);
+			lb	=__Realize_PID(&dispid->lb,err);
+			rb	=__Realize_PID(&dispid->rb,err);
+			rf	=__Realize_PID(&dispid->rf,err);
+		}
+		
+		
+		__carStatVel_Update(carTar,
 
+		ABS_CLAMP(lf,(carTar->MaxVel)),
+		ABS_CLAMP(lb,(carTar->MaxVel)),
+		ABS_CLAMP(rb,(carTar->MaxVel)),
+		ABS_CLAMP(rf,(carTar->MaxVel))		
+		);
+	
+	
+	}
+	
+	
+	
+	
+	
 	return 0;
 }
 
@@ -56,7 +94,8 @@ int CarDisCalibration(SplitCarTargetParm* carTar,Car_Stat* carstat,PidCar* dispi
 /* -------------------------------- end -------------------------------- */
 int CarSitaCalibration(SplitCarTargetParm* carTar,Car_Stat* carstat,PidWheel* sitapid){
 	
-	float err = carTar->Tar_dis-(carstat->CalibrationDis);	
+	
+	float err = carTar->Tar_dis-(carstat->SideLidarCaliDis);	
 	//目标速度转换
 	float dertavel = __Realize_PID(sitapid,err);
 	
@@ -65,6 +104,8 @@ int CarSitaCalibration(SplitCarTargetParm* carTar,Car_Stat* carstat,PidWheel* si
 		dertavel=0;
 		return 1;
 	} 
+	
+
 	__carStatDertaVel_Update(carTar,dertavel);
 	return 0;
 }
@@ -80,25 +121,68 @@ int CarSitaCalibration(SplitCarTargetParm* carTar,Car_Stat* carstat,PidWheel* si
 **			 dispid: [输入/出] 
 **/
 /* -------------------------------- end -------------------------------- */
+int cnt = 0;
+
+float calculateAngleError(float target, float current) {
+    // 1. 计算原始误差
+    float error = target - current;
+    
+    // 2. 将误差规范到[-180, 180]区间
+    error = fmodf(error, 360.0f);
+    if (error < -180.0f) {
+        error += 360.0f;
+    } else if (error > 180.0f) {
+        error -= 360.0f;
+    }
+    
+    // 3. 处理边界情况（如179.9°到-180°的跳变）
+    if (fabsf(error) > 179.9f) {
+        // 选择最短路径
+        error = (error > 0) ? (error - 360.0f) : (error + 360.0f);
+    }
+    
+    return error;
+}
+
 int CarSitaSet(SplitCarTargetParm* carTar,Car_Stat* carstat,PidWheel* sitapid){
-	float err = (carTar->Tar_sita)-(carstat->Sita);
+	float err = calculateAngleError(carTar->Tar_sita,carstat->Sita);
+	float derta_val = 0;
+//	cnt+=1;
 	
 	//判定
 	if(fastest_fabsf(err) < 0.5f){
-		carTar->DertaVel=0;//无差速
-		return 1;
-	} 
-
-	//目标速度转换
-	float dertavel = __Realize_PID(sitapid,err);
+		derta_val=0;//无差速
+		__carStatDertaVel_Update(carTar,derta_val);
 		
-	//printf("sita:%.2f err:%.2f v:%.2f\r\n",carstat->Sita,err,dertavel);
+		return 1;
+	}
 	
-	__carStatDertaVel_Update(carTar,ABS_CLAMP_MAX(dertavel,carTar->MaxVel));
+	//分段
+	else{
+		
+		if(err<=-20){
+			derta_val = -65;
+		}
+		
+		else if(err>=20){
+			derta_val = 65;
+		}
+		
+		//pid
+		else{
+			derta_val = __Realize_PID(sitapid,err);
+		}
+		
+//		if(cnt%4==0){
+//			cnt	=0;
+//			printf("%.1f %.1f %.1f\r\n",carstat->Sita,carTar->Tar_sita,derta_val);	
+//		}
+		
+		__carStatDertaVel_Update(carTar,ABS_CLAMP(derta_val,carTar->MaxVel));
+		return 0;
 	
-
-	
-	return 0;
+	}
+		
 }
 
 /* -------------------------------- begin  -------------------------------- */
@@ -114,15 +198,14 @@ int CarDisSet(SplitCarTargetParm* carTar,Car_Stat* carstat,PidCar* dispid){
 	//err
 	float err = carTar->Tar_dis-(carstat->Dis);
 
-	
 	//判定
 	if((fastest_fabsf(err) <= 0.1f)) return 1;	
 	
 	__carStatVel_Update(carTar,
-		ABS_CLAMP_MAX(__Realize_PID(&dispid->lf,err),(carTar->MaxVel)),
-		ABS_CLAMP_MAX(__Realize_PID(&dispid->lb,err),(carTar->MaxVel)),
-		ABS_CLAMP_MAX(__Realize_PID(&dispid->rb,err),(carTar->MaxVel)),
-		ABS_CLAMP_MAX(__Realize_PID(&dispid->rf,err),(carTar->MaxVel))		
+		ABS_CLAMP(__Realize_PID(&dispid->lf,err),(carTar->MaxVel)),
+		ABS_CLAMP(__Realize_PID(&dispid->lb,err),(carTar->MaxVel)),
+		ABS_CLAMP(__Realize_PID(&dispid->rb,err),(carTar->MaxVel)),
+		ABS_CLAMP(__Realize_PID(&dispid->rf,err),(carTar->MaxVel))		
 		);
 
 	return 0;
@@ -149,13 +232,14 @@ void WheelVelSet(SplitCarTargetParm* carTar,Car_Stat* carstat,PidCar* pidvel){
 	
 	__carStat_Update(carTar);
 	
-	//printf("%f,%f\r\n",(carTar->Tar_LFvel),(carstat->motorStat.LeftFrt.vel));
-
 	
 	float lf_output = __Incremental_PID(&pidvel->lf,(carTar->Tar_LFvel),(carstat->motorStat.LeftFrt.vel));
 	float lb_output = __Incremental_PID(&pidvel->lb,(carTar->Tar_LBvel),(carstat->motorStat.leftBack.vel));
 	float rf_output = __Incremental_PID(&pidvel->rf,(carTar->Tar_RFvel),(carstat->motorStat.RigFrt.vel));
 	float rb_output = __Incremental_PID(&pidvel->rb,(carTar->Tar_RBvel),(carstat->motorStat.RigBack.vel));
+	
+	
+	
 		
 	__PWM_MotorSet(lf_output,lb_output,rf_output,rb_output);
 }
@@ -186,33 +270,32 @@ void PidParam_Init(PidWheel* pid,float kp,float ki,float kd){
 	pid->Kd = kd;
 }
 
+
+
+
 /**************************************************************************
 @bref: 位置式PID控制器
 @para	：当前位置	pid->actual_dis
 @return: 指定速度	pid->output_val
 **************************************************************************/
-int cnt = 0;
+
 
 float __Realize_PID(PidWheel * pid,float err)
 {
 
-	cnt+=1;
 	
-	pid->err = err;		
+	pid->err =err;
+
+	
+	
+	
 	pid->err_sum += pid->err;//误差累计值 = 当前误差累计和
 	
 	float P = pid->Kp*pid->err;
 	float I = pid->Ki*pid->err_sum;
-	float D = pid->Kd*(pid->err - pid->err_last);
+	float D = pid->Kd*(pid->err - pid->err_last);    
 	
-    I = ABS_CLAMP_MAX(I, Integral_Limit);
-	
-//	if(cnt%4 ==0 ){
-//		
-//		//printf("%.2f	%.2f\r\n",pid->err,pid->err_last);
-//		printf("%.1f  %.1f  %.1f %.1f  %.1f\r\n",err,P,I,D,(P + I + D));
-//		cnt = 0;
-//	}
+    I = ABS_CLAMP(I, Integral_Limit);
 	
 	//使用PID控制 输出 = Kp*当前误差  +  Ki*误差累计值 + Kd*(当前误差-上次误差)
 	pid->output = P + I + D;	
@@ -221,7 +304,6 @@ float __Realize_PID(PidWheel * pid,float err)
 		
 	return pid->output;
 }
-
 
 /**************************************************************************
 函数功能：增量PID控制器
@@ -233,6 +315,11 @@ e(k)代表本次偏差
 e(k-1)代表上一次的偏差  以此类推 
 pwm代表增量输出
 **************************************************************************/
+
+extern PidCar pidvel;
+
+
+
 float __Incremental_PID(PidWheel * pid,float target,float actual)
 { 		
 	//计算
@@ -245,20 +332,27 @@ float __Incremental_PID(PidWheel * pid,float target,float actual)
 	float D = pid->Kd*(pid->err - pid->err_last);
 	float I = pid->Ki*(pid->err - 2*pid->err_last + pid->err_pre);
 	
-	I= ABS_CLAMP_MAX(fastest_fabsf(I),Integral_Limit);
+	I= ABS_CLAMP(I,Integral_Limit);
 	    	
 	pid->output += P+I+D;
 
-	//	pid->output  += (pid->Kd*(pid->err - pid->err_last))               /* 比例环节 */
-//									 + (pid->Kp * pid->err)                           /* 积分环节 */
-//									 + (pid->Ki*(pid->err - 2*pid->err_last + pid->err_pre));  /* 微分环节 */
-	
+
 	
 	pid->err_pre=pid->err_last;                                   /* 保存上上次偏差 */
 	pid->err_last=pid->err;	                                    /* 保存上一次偏差 */
 	
 	
-	//printf("%f,%f,%f,%f,%f\r\n",actual,pid->output,P,d,i);
+	
+//	if(pid==&pidvel.rb){
+//		printf("%.2f %.2f %.2F\r\n",P,I,D);
+		
+	
+//	}
+	
+	
+	
+	
+	
 
 	return pid->output;                                            /* 输出结果 */
 }

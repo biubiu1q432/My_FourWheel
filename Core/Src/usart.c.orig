@@ -24,6 +24,7 @@
 
 /* USER CODE END 0 */
 
+UART_HandleTypeDef huart4;
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
@@ -33,6 +34,34 @@ DMA_HandleTypeDef hdma_usart2_tx;
 DMA_HandleTypeDef hdma_usart3_rx;
 DMA_HandleTypeDef hdma_usart3_tx;
 
+/* UART4 init function */
+void MX_UART4_Init(void)
+{
+
+  /* USER CODE BEGIN UART4_Init 0 */
+
+  /* USER CODE END UART4_Init 0 */
+
+  /* USER CODE BEGIN UART4_Init 1 */
+
+  /* USER CODE END UART4_Init 1 */
+  huart4.Instance = UART4;
+  huart4.Init.BaudRate = 230400;
+  huart4.Init.WordLength = UART_WORDLENGTH_8B;
+  huart4.Init.StopBits = UART_STOPBITS_1;
+  huart4.Init.Parity = UART_PARITY_NONE;
+  huart4.Init.Mode = UART_MODE_TX_RX;
+  huart4.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart4.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN UART4_Init 2 */
+
+  /* USER CODE END UART4_Init 2 */
+
+}
 /* USART1 init function */
 
 void MX_USART1_UART_Init(void)
@@ -125,7 +154,34 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
 {
 
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-  if(uartHandle->Instance==USART1)
+  if(uartHandle->Instance==UART4)
+  {
+  /* USER CODE BEGIN UART4_MspInit 0 */
+
+  /* USER CODE END UART4_MspInit 0 */
+    /* UART4 clock enable */
+    __HAL_RCC_UART4_CLK_ENABLE();
+
+    __HAL_RCC_GPIOC_CLK_ENABLE();
+    /**UART4 GPIO Configuration
+    PC10     ------> UART4_TX
+    PC11     ------> UART4_RX
+    */
+    GPIO_InitStruct.Pin = Lidar_TX_Pin|Lidar_RX_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF8_UART4;
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+    /* UART4 interrupt Init */
+    HAL_NVIC_SetPriority(UART4_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(UART4_IRQn);
+  /* USER CODE BEGIN UART4_MspInit 1 */
+
+  /* USER CODE END UART4_MspInit 1 */
+  }
+  else if(uartHandle->Instance==USART1)
   {
   /* USER CODE BEGIN USART1_MspInit 0 */
 
@@ -304,7 +360,27 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
 void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 {
 
-  if(uartHandle->Instance==USART1)
+  if(uartHandle->Instance==UART4)
+  {
+  /* USER CODE BEGIN UART4_MspDeInit 0 */
+
+  /* USER CODE END UART4_MspDeInit 0 */
+    /* Peripheral clock disable */
+    __HAL_RCC_UART4_CLK_DISABLE();
+
+    /**UART4 GPIO Configuration
+    PC10     ------> UART4_TX
+    PC11     ------> UART4_RX
+    */
+    HAL_GPIO_DeInit(GPIOC, Lidar_TX_Pin|Lidar_RX_Pin);
+
+    /* UART4 interrupt Deinit */
+    HAL_NVIC_DisableIRQ(UART4_IRQn);
+  /* USER CODE BEGIN UART4_MspDeInit 1 */
+
+  /* USER CODE END UART4_MspDeInit 1 */
+  }
+  else if(uartHandle->Instance==USART1)
   {
   /* USER CODE BEGIN USART1_MspDeInit 0 */
 
@@ -386,33 +462,110 @@ int fputc(int ch, FILE *f)
 }
 
 
-HAL_StatusTypeDef Usart2Init(int BaudRate)
+HAL_StatusTypeDef MPU_Usart_Init(int BaudRate)
 {
- /* 1. 反初始化 USART2 */
-  HAL_UART_DeInit(&huart2);
-  HAL_UART_MspDeInit(&huart2);
-  /* 2. 修改波特率参数 */
-  huart2.Init.BaudRate = BaudRate;
-  huart2.Instance = USART2;
-  huart2.Init.WordLength = UART_WORDLENGTH_8B;
-  huart2.Init.StopBits = UART_STOPBITS_1;
-  huart2.Init.Parity = UART_PARITY_NONE;
-  huart2.Init.Mode = UART_MODE_TX_RX;
-  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
-  if (HAL_UART_Init(&huart2) != HAL_OK)
-  {
-    Error_Handler();
-  } 
-	HAL_UART_MspInit(&huart2);
-	
-  /* 4. 重新启用接收中断（如果需要） */
-  extern char mpu_tmp; // 确保已在其他地方声明
-  HAL_UART_Receive_IT(&huart2, &mpu_tmp, 1);
-  return HAL_OK;
+    HAL_UART_DeInit(&huart2);
+    HAL_UART_MspDeInit(&huart2);
+
+    huart2.Init.BaudRate = BaudRate;
+    huart2.Instance = USART2;
+    huart2.Init.WordLength = UART_WORDLENGTH_8B;
+    huart2.Init.StopBits = UART_STOPBITS_1;
+    huart2.Init.Parity = UART_PARITY_NONE;
+    huart2.Init.Mode = UART_MODE_TX_RX;
+    huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+    huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+
+    if (HAL_UART_Init(&huart2) != HAL_OK)
+    {
+        Error_Handler();
+    }
+
+    HAL_UART_MspInit(&huart2);
+    extern char mpu_tmp;
+    HAL_UART_Receive_IT(&huart2, &mpu_tmp, 1);
+    return HAL_OK;
 }
 
 
+
+
+extern LidarPointTypedef Pack_Data[12];
+extern LidarPointTypedef Pack_sum;
+extern uint16_t receive_cnt;
+extern uint8_t confidence;
+extern uint16_t distance,noise,reftof;
+extern uint32_t peak,intg;
+extern uint8_t Lidar_Receive_buf[1];
+
+
+void data_process(void)
+{
+    /* ??????? */
+    static u8 cnt = 0;
+    u8 i;
+    static u16 count = 0;
+    static u32 sum = 0;
+    LidarPointTypedef Pack_sum;
+    for(i=0; i<12; i++)									/* 12???????? */
+    {
+        if(Pack_Data[i].distance != 0)  /* ???0??? */
+        {
+            count++;
+            Pack_sum.distance += Pack_Data[i].distance;
+            Pack_sum.noise += Pack_Data[i].noise;
+            Pack_sum.peak += Pack_Data[i].peak;
+            Pack_sum.confidence += Pack_Data[i].confidence;
+            Pack_sum.intg += Pack_Data[i].intg;
+            Pack_sum.reftof += Pack_Data[i].reftof;
+        }
+    }
+    if(count !=0)
+    {
+
+        distance = Pack_sum.distance/count;
+        noise = Pack_sum.noise/count;
+        peak = Pack_sum.peak/count;
+        confidence = Pack_sum.confidence/count;
+        intg = Pack_sum.intg/count;
+        reftof = Pack_sum.reftof/count;
+        Pack_sum.distance = 0;
+        Pack_sum.noise = 0;
+        Pack_sum.peak = 0;
+        Pack_sum.confidence = 0;
+        Pack_sum.intg = 0;
+        Pack_sum.reftof = 0;
+        count = 0;
+    }
+}
+
+
+HAL_StatusTypeDef LidarUart_ISREN(int En)
+{
+    HAL_UART_DeInit(&huart4);
+    HAL_UART_MspDeInit(&huart4);
+
+    if(En) {
+        huart4.Init.BaudRate = 230400;
+        huart4.Instance = UART4;
+        huart4.Init.WordLength = UART_WORDLENGTH_8B;
+        huart4.Init.StopBits = UART_STOPBITS_1;
+        huart4.Init.Parity = UART_PARITY_NONE;
+        huart4.Init.Mode = UART_MODE_TX_RX;
+        huart4.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+        huart4.Init.OverSampling = UART_OVERSAMPLING_16;
+
+        if (HAL_UART_Init(&huart4) != HAL_OK)
+        {
+            Error_Handler();
+        }
+
+        HAL_UART_MspInit(&huart4);
+        HAL_UART_Receive_IT(&huart4,Lidar_Receive_buf,sizeof(Lidar_Receive_buf));
+    }
+
+    return HAL_OK;
+}
 
 
 

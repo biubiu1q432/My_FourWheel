@@ -4,11 +4,6 @@
 #define LIMIT(val) ((val) > Arr ? Arr : ((val) < -Arr ? -Arr : (val)))
 
 
-
-
-
-
-
 void __carStat_Update(SplitCarTargetParm* carTar){
 	carTar->Tar_LFvel =	carTar->LFvel - carTar->DertaVel;
 	carTar->Tar_LBvel = carTar->LBvel - carTar->DertaVel;
@@ -92,6 +87,9 @@ void Refresh_CarDis(Car_Stat* carstat){
 	carstat->motorStat.RigFrt.dis = 0;
 	carstat->motorStat.RigBack.dis = 0;
 	carstat->Dis = 0;
+	carstat->FrontLidarCaliDis =0;
+	carstat->SideLidarCaliDis=0;
+	
 	
 }
 
@@ -117,8 +115,11 @@ void Split_CarTarParam(SplitCarTargetParm* carTar,CarOrderParam* orderparam){
 	carTar->RBvel =(orderparam->Order_vel)-deritaVel;
 	
 	carTar->Tar_dis = (orderparam->Order_dis);
-	carTar->MaxVel = orderparam->Order_MAXvel;
 	carTar->Tar_sita = orderparam->Order_sita;
+	
+	if(orderparam->Order_MAXvel)carTar->MaxVel = orderparam->Order_MAXvel;
+	else carTar->MaxVel  = Def_Max_Vel;
+
 
 }
 
