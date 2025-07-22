@@ -135,11 +135,6 @@ void CarInv_Kinematics(Car_Stat* carstat){
 	int rf = __MoterParamGet(&TIM_MOTOR_C_EC);
 	int rb = __MoterParamGet(&TIM_MOTOR_D_EC);
 	
-//	//滤波
-//	lf = LOWPASS_FILTER_Calc(&velFilter,lf);	
-//	lb = LOWPASS_FILTER_Calc(&velFilter,lb);	
-//	rf = LOWPASS_FILTER_Calc(&velFilter,rf);	
-//	rb = LOWPASS_FILTER_Calc(&velFilter,rb);	
 
 	//距离
 	float lf_dis = (lf/OnceEcNum)*wheelCircumference;
@@ -156,6 +151,7 @@ void CarInv_Kinematics(Car_Stat* carstat){
 	float LeftVel = (lf_vel+lb_vel)/2.0f;
 	float RigVel = (rf_vel+rb_vel)/2.0f;
 	
+
 	//电机
 	carstat->motorStat.LeftFrt.vel = lf_vel;
 	carstat->motorStat.leftBack.vel = lb_vel;
@@ -186,11 +182,37 @@ void CarInv_Kinematics(Car_Stat* carstat){
 
 int __MoterParamGet(TIM_HandleTypeDef* tim){
 
-	int tmp = __HAL_TIM_GET_COUNTER(tim);
-
+	int tmp;
+	
+	int cnt = __HAL_TIM_GET_COUNTER(tim);
+	
 	__HAL_TIM_SET_COUNTER(tim,0);
-	if(tmp > 5000) tmp -= 10000; 
+	
+	uint32_t cr1 = tim->Instance->CR1;
+    uint32_t dir = (cr1 & TIM_CR1_DIR) >> TIM_CR1_DIR_Pos;
+	
+	
+	
+	if(cnt==0){
+		tmp =  cnt;
+	}
+	
+	else{
+		//反转
+		if(dir==1){
+			tmp = cnt-TIM_EC_ARR;
+		}
+		
+		//正转
+		else{
+			tmp =  cnt;
+		}
+	}
+	
+	//if(tim==&TIM_MOTOR_D_EC)printf("%d,%d,%d\r\n",tmp,cnt,dir);
+	
 	return tmp;
+	
 }
 
 void __PWM_MotorSet(float LeftFrt,float leftBack,float RigFrt,float RigtBack){

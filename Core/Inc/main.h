@@ -123,6 +123,7 @@ void Error_Handler(void);
 #define pi 3.1415925
 #define wheelCircumference pi*wheelDiameter
 #define Arr 1000.0f
+#define TIM_EC_ARR 10000
 #define Ts 0.025f
 #define ModeratingRatio 34.014
 #define PPR 500

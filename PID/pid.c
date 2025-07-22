@@ -147,7 +147,6 @@ float calculateAngleError(float target, float current) {
 int CarSitaSet(SplitCarTargetParm* carTar,Car_Stat* carstat,PidWheel* sitapid){
 	float err = calculateAngleError(carTar->Tar_sita,carstat->Sita);
 	float derta_val = 0;
-//	cnt+=1;
 	
 	//判定
 	if(fastest_fabsf(err) < 0.5f){
@@ -172,12 +171,7 @@ int CarSitaSet(SplitCarTargetParm* carTar,Car_Stat* carstat,PidWheel* sitapid){
 		else{
 			derta_val = __Realize_PID(sitapid,err);
 		}
-		
-//		if(cnt%4==0){
-//			cnt	=0;
-//			printf("%.1f %.1f %.1f\r\n",carstat->Sita,carTar->Tar_sita,derta_val);	
-//		}
-		
+				
 		__carStatDertaVel_Update(carTar,ABS_CLAMP(derta_val,carTar->MaxVel));
 		return 0;
 	
@@ -237,7 +231,6 @@ void WheelVelSet(SplitCarTargetParm* carTar,Car_Stat* carstat,PidCar* pidvel){
 	float lb_output = __Incremental_PID(&pidvel->lb,(carTar->Tar_LBvel),(carstat->motorStat.leftBack.vel));
 	float rf_output = __Incremental_PID(&pidvel->rf,(carTar->Tar_RFvel),(carstat->motorStat.RigFrt.vel));
 	float rb_output = __Incremental_PID(&pidvel->rb,(carTar->Tar_RBvel),(carstat->motorStat.RigBack.vel));
-	
 	
 	
 		
@@ -328,9 +321,11 @@ float __Incremental_PID(PidWheel * pid,float target,float actual)
 	pid->err = pid->target - pid->actual;//当前误差=目标值-真实值   
 	
 	
-	float P = (pid->Kp * pid->err);
-	float D = pid->Kd*(pid->err - pid->err_last);
-	float I = pid->Ki*(pid->err - 2*pid->err_last + pid->err_pre);
+	
+	float P = pid->Kp * (pid->err - pid->err_last);
+	float I = pid->Ki * pid->err; // 正确积分项
+	float D = pid->Kd * (pid->err - 2*pid->err_last + pid->err_pre);
+	
 	
 	I= ABS_CLAMP(I,Integral_Limit);
 	    	
@@ -344,11 +339,10 @@ float __Incremental_PID(PidWheel * pid,float target,float actual)
 	
 	
 //	if(pid==&pidvel.rb){
-//		printf("%.2f %.2f %.2F\r\n",P,I,D);
-		
-	
+//		printf("%.2f\r\n",actual);
+//	
 //	}
-	
+//	
 	
 	
 	

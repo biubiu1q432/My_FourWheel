@@ -210,7 +210,7 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the semaphores(s) */
   /* creation of AnlayOderDataFlag */
-  AnlayOderDataFlagHandle = osSemaphoreNew(1, 1, &AnlayOderDataFlag_attributes);
+  AnlayOderDataFlagHandle = osSemaphoreNew(1, 0, &AnlayOderDataFlag_attributes);
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
     /* add semaphores, ... */
@@ -295,7 +295,7 @@ void MoveControl(void *argument)
     const TickType_t xDelay = pdMS_TO_TICKS(1000); // 延迟1000毫秒
 
 
-    PidMlpi_Param_Init(&pidvel,2,0.1,1.6);
+    PidMlpi_Param_Init(&pidvel,14,1.7,0.2);
     PidMlpi_Param_Init(&piddis,4,0.00,0);
     PidMlpi_Param_Init(&pidCalidis,18,0.1,0);
     PidParam_Init(&pidsita,3,0.02,1.5);
@@ -306,8 +306,9 @@ void MoveControl(void *argument)
     }
 
     TickType_t xLastWakeTime = xTaskGetTickCount();
-
-
+		
+	
+	
     /* Infinite loop */
     for(;;)
     {
@@ -330,17 +331,10 @@ void MoveControl(void *argument)
             TaskOverFlag = CarDisSet(&Cartar,&carStat,&piddis);
 
             if(TaskOverFlag) {
-                
-//				
-//				xTaskNotify(
-//                    DataSendTaskHandle,
-//                    0,
-//                    eNoAction
-//                );
+                TASKNUM = Free;
 				
 				xTaskNotifyGive(DataSendTaskHandle);
 
-                TASKNUM = Free;
             }
         }
 
@@ -348,17 +342,11 @@ void MoveControl(void *argument)
         else if(TASKNUM == RotateSpAngle) {
             if(SitaOverFlag) {
                 TaskOverFlag = 1;
-
-//                xTaskNotify(
-//                    DataSendTaskHandle,
-//                    0,
-//                    eNoAction
-//                );
-
-				xTaskNotifyGive(DataSendTaskHandle);
-
                 BaseSitaUpdate(&carStat,&Cartar);//坐标系重置
                 TASKNUM = Free;
+				
+				xTaskNotifyGive(DataSendTaskHandle);
+
             }
         }
 
@@ -372,14 +360,8 @@ void MoveControl(void *argument)
                 EnUpLidarDisTask = 0;
                 TASKNUM = Free;
 
-//                xTaskNotify(
-//                    DataSendTaskHandle,
-//                    0,
-//                    eNoAction
-//                );
+
 				xTaskNotifyGive(DataSendTaskHandle);
-
-
 
             }
 
@@ -390,13 +372,6 @@ void MoveControl(void *argument)
             TaskOverFlag = CarSitaCalibration(&Cartar,&carStat,&pidsita);
             if(TaskOverFlag) {
                 LidarUart_ISREN(0);
-
-//                xTaskNotify(
-//                    DataSendTaskHandle,
-//                    0,
-//                    eNoAction
-//                );
-
                 BaseSitaUpdate(&carStat,&Cartar);//坐标系重置
                 TASKNUM = Free;
 				
@@ -495,7 +470,7 @@ void OdarGet(void *argument)
         if(xSemaphoreTake(AnlayOderDataFlagHandle, portMAX_DELAY) == pdTRUE) {
 
 
-            printf("OdarGet\r\n");
+            //printf("OdarGet\r\n");
 
 
             // 检查最小有效长度：帧头 + | + 命令号 + 2个参数 + 帧尾
@@ -619,13 +594,6 @@ void OdarGet(void *argument)
 
 
         }
-
-//
-//        // 阻塞等待通知
-//        ulTaskNotifyTake(            // 比xTaskNotifyWait更简洁
-//            pdTRUE,                  // 退出时清零通知值
-//            portMAX_DELAY            // 无限等待
-//        );
 
 
     }
@@ -904,6 +872,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 
 
 
+
+
 int cnt_ = 0;
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
@@ -916,16 +886,6 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
 
         //lidar
         if((ORDER_DATA[0] == '|')) {
-
-            //printf("7\r\n");
-
-//            xTaskNotifyFromISR(
-//                LidarCaliTaskHandle,     // 目标任务句柄
-//                0,
-//                eNoAction, 			// 仅唤醒
-//                &xHigherPriorityTaskWoken
-//            );
-//            portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 			
 			if(EnUpLidarDisRead) {
 				cnt_+=1;
@@ -944,17 +904,8 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
 
         }
 
-        else if(ORDER_DATA[0] == '@') {
-            //printf("7\r\n");
-            
+        else if(ORDER_DATA[0] == '@') {            
 			xSemaphoreGiveFromISR(AnlayOderDataFlagHandle, &xHigherPriorityTaskWoken);
-
-//            xTaskNotifyFromISR(
-//                OdarGetTaskHandle,     // 目标任务句柄
-//                0,
-//                eNoAction, 			// 仅唤醒
-//                &xHigherPriorityTaskWoken
-//            );
             portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
         }
 
