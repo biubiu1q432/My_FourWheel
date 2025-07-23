@@ -39,3 +39,4 @@ fourwheel\motor.o: C:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include\core_cm4.h
 fourwheel\motor.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
 fourwheel\motor.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\math.h
 fourwheel\motor.o: ../Fliter/lowpass_filter.h
+fourwheel\motor.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h

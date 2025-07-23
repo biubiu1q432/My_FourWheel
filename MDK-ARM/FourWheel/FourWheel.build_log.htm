@@ -27,41 +27,40 @@ Project File Date:  07/22/2025
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 5 (build 528)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
 Build target 'FourWheel'
-assembling startup_stm32f407xx.s...
 compiling freertos.c...
-../Core/Src/freertos.c(293): warning:  #177-D: variable "xHigherPriorityTaskWoken"  was declared but never referenced
+../Core/Src/freertos.c(296): warning:  #177-D: variable "xHigherPriorityTaskWoken"  was declared but never referenced
       BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-../Core/Src/freertos.c(409): warning:  #177-D: variable "yaw"  was declared but never referenced
+../Core/Src/freertos.c(407): warning:  #177-D: variable "yaw"  was declared but never referenced
       float yaw;
-../Core/Src/freertos.c(410): warning:  #177-D: variable "fAcc"  was declared but never referenced
+../Core/Src/freertos.c(408): warning:  #177-D: variable "fAcc"  was declared but never referenced
       float fAcc[3], fGyro[3], fAngle[3];
-../Core/Src/freertos.c(410): warning:  #177-D: variable "fGyro"  was declared but never referenced
+../Core/Src/freertos.c(408): warning:  #177-D: variable "fGyro"  was declared but never referenced
       float fAcc[3], fGyro[3], fAngle[3];
-../Core/Src/freertos.c(411): warning:  #177-D: variable "i"  was declared but never referenced
+../Core/Src/freertos.c(409): warning:  #177-D: variable "i"  was declared but never referenced
       int i;
-../Core/Src/freertos.c(461): warning:  #177-D: variable "xHigherPriorityTaskWoken"  was declared but never referenced
+../Core/Src/freertos.c(459): warning:  #177-D: variable "xHigherPriorityTaskWoken"  was declared but never referenced
       BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-../Core/Src/freertos.c(655): warning:  #167-D: argument of type "char *" is incompatible with parameter of type "uint8_t *"
+../Core/Src/freertos.c(664): warning:  #167-D: argument of type "char *" is incompatible with parameter of type "uint8_t *"
           HAL_UART_Receive_IT(&huart2,&mpu_tmp,1);
-../Core/Src/freertos.c(1135): warning:  #177-D: function "SendData"  was declared but never referenced
+../Core/Src/freertos.c(1144): warning:  #177-D: function "SendData"  was declared but never referenced
   static void SendData(float value) {
-../Core/Src/freertos.c(1147): warning:  #177-D: function "Debug_Acutal_Dis"  was declared but never referenced
+../Core/Src/freertos.c(1156): warning:  #177-D: function "Debug_Acutal_Dis"  was declared but never referenced
   static void Debug_Acutal_Dis() {
-../Core/Src/freertos.c(1151): warning:  #177-D: function "Debug_Tar_Dis"  was declared but never referenced
+../Core/Src/freertos.c(1160): warning:  #177-D: function "Debug_Tar_Dis"  was declared but never referenced
   static void Debug_Tar_Dis() {
-../Core/Src/freertos.c(1160): warning:  #177-D: function "Debug_Acutal_Vel"  was declared but never referenced
+../Core/Src/freertos.c(1169): warning:  #177-D: function "Debug_Acutal_Vel"  was declared but never referenced
   static void Debug_Acutal_Vel() {
-../Core/Src/freertos.c(1167): warning:  #177-D: function "Debug_Tar_Vel"  was declared but never referenced
+../Core/Src/freertos.c(1176): warning:  #177-D: function "Debug_Tar_Vel"  was declared but never referenced
   static void Debug_Tar_Vel() {
-../Core/Src/freertos.c(1175): warning:  #177-D: function "Debug_mpu"  was declared but never referenced
+../Core/Src/freertos.c(1184): warning:  #177-D: function "Debug_mpu"  was declared but never referenced
   static void Debug_mpu() {
-../Core/Src/freertos.c(1179): warning:  #177-D: function "Debug_Odom"  was declared but never referenced
+../Core/Src/freertos.c(1188): warning:  #177-D: function "Debug_Odom"  was declared but never referenced
   static void Debug_Odom() {
-../Core/Src/freertos.c(1193): warning:  #177-D: function "Debug_taskStat"  was declared but never referenced
+../Core/Src/freertos.c(1202): warning:  #177-D: function "Debug_taskStat"  was declared but never referenced
   static void Debug_taskStat() {
 ../Core/Src/freertos.c: 15 warnings, 0 errors
 linking...
-Program Size: Code=35640 RO-data=1356 RW-data=304 ZI-data=22624  
+Program Size: Code=35668 RO-data=1356 RW-data=304 ZI-data=22624  
 FromELF: creating hex file...
 "FourWheel\FourWheel.axf" - 0 Error(s), 15 Warning(s).
 
@@ -86,7 +85,7 @@ Package Vendor: Keil
 <h2>Collection of Component Files used:</h2>
 
    * Component: ARM::CMSIS:CORE:5.0.1
-Build Time Elapsed:  00:00:04
+Build Time Elapsed:  00:00:03
 </pre>
 </body>
 </html>

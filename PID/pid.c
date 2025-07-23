@@ -21,7 +21,6 @@ float roundToTwoDecimals(float num) {
 }
 
 
-
 /* -------------------------------- begin  -------------------------------- */
 /**
   * @Name    CarDisCalibration
@@ -33,10 +32,8 @@ float roundToTwoDecimals(float num) {
 int CarDisCalibration(SplitCarTargetParm* carTar,Car_Stat* carstat,PidCar* dispid){
 	
 	float lf,lb,rb,rf;
-	
 	//err
 	float err = (carstat->FrontLidarCaliDis)-carTar->Tar_dis;
-	
 	
 	//判定
 	if((fastest_fabsf(err) <= 0.05f)) return 1;	
@@ -54,7 +51,6 @@ int CarDisCalibration(SplitCarTargetParm* carTar,Car_Stat* carstat,PidCar* dispi
 			lb = -30;
 			rb = -30;
 			rf = -30;
-			
 		}
 		else{
 			lf  = __Realize_PID(&dispid->lf,err);
@@ -71,14 +67,9 @@ int CarDisCalibration(SplitCarTargetParm* carTar,Car_Stat* carstat,PidCar* dispi
 		ABS_CLAMP(rb,(carTar->MaxVel)),
 		ABS_CLAMP(rf,(carTar->MaxVel))		
 		);
-	
-	
+
 	}
-	
-	
-	
-	
-	
+
 	return 0;
 }
 
@@ -160,17 +151,20 @@ int CarSitaSet(SplitCarTargetParm* carTar,Car_Stat* carstat,PidWheel* sitapid){
 	else{
 		
 		if(err<=-20){
-			derta_val = -65;
+			derta_val = -45;
 		}
 		
 		else if(err>=20){
-			derta_val = 65;
+			derta_val = 45;
 		}
 		
 		//pid
 		else{
 			derta_val = __Realize_PID(sitapid,err);
 		}
+		
+		//printf("%.2f,%.2f,%.2f\r\n",carstat->Sita,carTar->Tar_sita,derta_val);
+
 				
 		__carStatDertaVel_Update(carTar,ABS_CLAMP(derta_val,carTar->MaxVel));
 		return 0;
@@ -201,6 +195,9 @@ int CarDisSet(SplitCarTargetParm* carTar,Car_Stat* carstat,PidCar* dispid){
 		ABS_CLAMP(__Realize_PID(&dispid->rb,err),(carTar->MaxVel)),
 		ABS_CLAMP(__Realize_PID(&dispid->rf,err),(carTar->MaxVel))		
 		);
+	
+	
+	
 
 	return 0;
 }
@@ -226,14 +223,16 @@ void WheelVelSet(SplitCarTargetParm* carTar,Car_Stat* carstat,PidCar* pidvel){
 	
 	__carStat_Update(carTar);
 	
-	
+
 	float lf_output = __Incremental_PID(&pidvel->lf,(carTar->Tar_LFvel),(carstat->motorStat.LeftFrt.vel));
 	float lb_output = __Incremental_PID(&pidvel->lb,(carTar->Tar_LBvel),(carstat->motorStat.leftBack.vel));
 	float rf_output = __Incremental_PID(&pidvel->rf,(carTar->Tar_RFvel),(carstat->motorStat.RigFrt.vel));
 	float rb_output = __Incremental_PID(&pidvel->rb,(carTar->Tar_RBvel),(carstat->motorStat.RigBack.vel));
 	
 	
-		
+	//printf("%.2f,%.2f,%.2f\r\n",(carTar->Tar_RBvel),(carstat->motorStat.RigBack.vel),rb_output);
+
+
 	__PWM_MotorSet(lf_output,lb_output,rf_output,rb_output);
 }
 
@@ -271,7 +270,7 @@ void PidParam_Init(PidWheel* pid,float kp,float ki,float kd){
 @para	：当前位置	pid->actual_dis
 @return: 指定速度	pid->output_val
 **************************************************************************/
-
+extern PidCar pidvel;
 
 float __Realize_PID(PidWheel * pid,float err)
 {
@@ -279,8 +278,6 @@ float __Realize_PID(PidWheel * pid,float err)
 	
 	pid->err =err;
 
-	
-	
 	
 	pid->err_sum += pid->err;//误差累计值 = 当前误差累计和
 	
@@ -294,6 +291,11 @@ float __Realize_PID(PidWheel * pid,float err)
 	pid->output = P + I + D;	
 	//保存上次误差: 这次误差赋值给上次误差
 	pid->err_last = pid->err;
+	
+	//if(pid==&pidsita.rb){
+		//printf("%.2f,%.2f,%.2f\r\n",P,I,D);
+	//}
+	
 		
 	return pid->output;
 }
@@ -309,9 +311,6 @@ e(k-1)代表上一次的偏差  以此类推
 pwm代表增量输出
 **************************************************************************/
 
-extern PidCar pidvel;
-
-
 
 float __Incremental_PID(PidWheel * pid,float target,float actual)
 { 		
@@ -323,31 +322,23 @@ float __Incremental_PID(PidWheel * pid,float target,float actual)
 	
 	
 	float P = pid->Kp * (pid->err - pid->err_last);
-	float I = pid->Ki * pid->err; // 正确积分项
+	float I = pid->Ki * pid->err; 
 	float D = pid->Kd * (pid->err - 2*pid->err_last + pid->err_pre);
 	
-	
-	I= ABS_CLAMP(I,Integral_Limit);
-	    	
+		    	
 	pid->output += P+I+D;
-
+	I = ABS_CLAMP(I, Integral_Limit);
 
 	
 	pid->err_pre=pid->err_last;                                   /* 保存上上次偏差 */
 	pid->err_last=pid->err;	                                    /* 保存上一次偏差 */
 	
 	
-	
 //	if(pid==&pidvel.rb){
-//		printf("%.2f\r\n",actual);
-//	
+//		printf("%.2f,%.2f\r\n",target,actual);
 //	}
 //	
 	
-	
-	
-	
-
 	return pid->output;                                            /* 输出结果 */
 }
 

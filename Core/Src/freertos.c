@@ -267,6 +267,9 @@ void StartDefaultTask(void *argument)
 
 
         //printf("dis:%.1f tar:%.1f v:%f\r\n",carStat.Dis,Cartar.Tar_dis,Cartar.Tar_LBvel);
+		
+		//printf("%f\r\n",Cartar.DertaVel);
+		
         HAL_GPIO_TogglePin(LED_GPIO_Port,LED_Pin);
         osDelay(80);
     }
@@ -286,7 +289,7 @@ void MoveControl(void *argument)
     TASKNUM =Free;
     Cartar.MaxVel = Def_Max_Vel;
 
-    int SitaOverFlag  =0;
+    int SitaOverFlag =0;
     static  int MoveReadyCnt=0;
     static int CntFlag=1;
 
@@ -294,11 +297,10 @@ void MoveControl(void *argument)
     const TickType_t xFrequency = pdMS_TO_TICKS(Ts*1000); // 10ms周期
     const TickType_t xDelay = pdMS_TO_TICKS(1000); // 延迟1000毫秒
 
-
-    PidMlpi_Param_Init(&pidvel,14,1.7,0.2);
-    PidMlpi_Param_Init(&piddis,4,0.00,0);
-    PidMlpi_Param_Init(&pidCalidis,18,0.1,0);
-    PidParam_Init(&pidsita,3,0.02,1.5);
+	PidMlpi_Param_Init(&pidvel,5.5,1.0,0);
+    PidMlpi_Param_Init(&piddis,2.65,0,4);
+    PidMlpi_Param_Init(&pidCalidis,18 ,0.1,1);
+	PidParam_Init(&pidsita,1.5,0.01,4);
 
 
     while(mpuFlag) {
@@ -307,8 +309,7 @@ void MoveControl(void *argument)
 
     TickType_t xLastWakeTime = xTaskGetTickCount();
 		
-	
-	
+
     /* Infinite loop */
     for(;;)
     {
@@ -586,6 +587,17 @@ void OdarGet(void *argument)
                 Split_CarTarParam(&Cartar, &OrderParam);
                 LidarUart_ISREN(1); // 启用激光
                 break;
+			
+			case 6: // 角度标定: dis
+                printf("[TASK6]: valdebug=%.2f\r\n", value1);
+                Cartar.RBvel = value1;
+				Cartar.RFvel = value1;
+				Cartar.LBvel = value1;
+				Cartar.LFvel = value1;
+			
+				Cartar.MaxVel = 1000;
+                break;
+			
 
             default:
                 printf("ERR: NO THIS TASK! %d\r\n", Task_type);

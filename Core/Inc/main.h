@@ -137,7 +137,7 @@ void Error_Handler(void);
 
 //限幅
 #define Integral_Limit 100
-#define Def_Max_Vel 40.f
+#define Def_Max_Vel 45.f
 
 
 //电机位置
