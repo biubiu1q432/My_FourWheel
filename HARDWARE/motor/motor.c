@@ -3,25 +3,6 @@
 
 #define LIMIT(val) ((val) > Arr ? Arr : ((val) < -Arr ? -Arr : (val)))
 
-#define SPEED_LIMIT  10.0f  // 下限幅绝对值阈值
-
-//inline void clamp_speed_bid(float* speed) {
-//    
-//	if(*speed >){
-//		if (*speed < SPEED_LIMIT) {
-//        *speed = SPEED_LIMIT;  // 正向超限 → 赋上限值
-//		} 
-
-//	}
-//	
-//	else{
-//		 if (*speed > -SPEED_LIMIT) {
-//        *speed = -SPEED_LIMIT; // 负向超限 → 赋下限值（保留符号）
-//		}
-//	}
-//	
-
-//}
 
 void __carStat_Update(SplitCarTargetParm* carTar){
 	
@@ -207,32 +188,13 @@ void CarInv_Kinematics(Car_Stat* carstat){
 }
 #include <stdbool.h>  
 int __MoterParamGet(TIM_HandleTypeDef* tim){
+	
+	
 	int tmp = __HAL_TIM_GET_COUNTER(tim);
-
 	__HAL_TIM_SET_COUNTER(tim,0);
-	if(tmp > 5000) tmp -= 10000; 
+	if(tmp > 30000) tmp -= TIM_EC_ARR; 
 	return tmp;
 
-
-//    int cnt = __HAL_TIM_GET_COUNTER(tim);
-//    bool is_downcounting = __HAL_TIM_IS_TIM_COUNTING_DOWN(tim); // 使用HAL标准宏替代寄存器操作[5,8](@ref)
-//    __HAL_TIM_SET_COUNTER(tim, 0); // 复位计数器
-//	
-//	if(cnt == 0) return cnt;
-//	
-//	else{
-//		if(is_downcounting) 
-//			return cnt - TIM_EC_ARR;
-//		
-//		else{
-//			return cnt;
-//		
-//		}
-//	
-//	}
-//	
-
-	
 }
 
 void __PWM_MotorSet(float LeftFrt,float leftBack,float RigFrt,float RigtBack){

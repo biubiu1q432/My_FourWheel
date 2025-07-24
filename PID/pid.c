@@ -36,21 +36,21 @@ int CarDisCalibration(SplitCarTargetParm* carTar,Car_Stat* carstat,PidCar* dispi
 	float err = (carstat->FrontLidarCaliDis)-carTar->Tar_dis;
 	
 	//判定
-	if((fastest_fabsf(err) <= 0.05f)) return 1;	
+	if((fastest_fabsf(err) <= 0.02f)) return 1;	
 	
 	else{
 	
-		if(err>=1){
-			lf = 30;
-			lb = 30;
-			rb = 30;
-			rf = 30;
+		if(err>=2){
+			lf = 25;
+			lb = 25;
+			rb = 25;
+			rf = 25;
 		}
-		else if(err<=-1) {
-			lf = -30;
-			lb = -30;
-			rb = -30;
-			rf = -30;
+		else if(err<=-2) {
+			lf = -25;
+			lb = -25;
+			rb = -25;
+			rf = -25;
 		}
 		else{
 			lf  = __Realize_PID(&dispid->lf,err);
@@ -151,11 +151,11 @@ int CarSitaSet(SplitCarTargetParm* carTar,Car_Stat* carstat,PidWheel* sitapid){
 	else{
 		
 		if(err<=-20){
-			derta_val = -45;
+			derta_val = -60;
 		}
 		
 		else if(err>=20){
-			derta_val = 45;
+			derta_val = 60;
 		}
 		
 		//pid
@@ -271,6 +271,7 @@ void PidParam_Init(PidWheel* pid,float kp,float ki,float kd){
 @return: 指定速度	pid->output_val
 **************************************************************************/
 extern PidCar pidvel;
+extern PidCar piddis;
 
 float __Realize_PID(PidWheel * pid,float err)
 {
@@ -292,10 +293,8 @@ float __Realize_PID(PidWheel * pid,float err)
 	//保存上次误差: 这次误差赋值给上次误差
 	pid->err_last = pid->err;
 	
-	//if(pid==&pidsita.rb){
-		//printf("%.2f,%.2f,%.2f\r\n",P,I,D);
-	//}
-	
+	//printf("%.2f,%.2f,%.2f\r\n",P,I,D,);
+
 		
 	return pid->output;
 }

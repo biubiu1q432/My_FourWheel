@@ -265,13 +265,11 @@ void StartDefaultTask(void *argument)
     for(;;)
     {
 
-
-        //printf("dis:%.1f tar:%.1f v:%f\r\n",carStat.Dis,Cartar.Tar_dis,Cartar.Tar_LBvel);
+        //printf("%.1f,%.1f,%.1f\r\n",carStat.Dis,Cartar.Tar_dis,Cartar.Tar_LBvel);		
 		
-		//printf("%f\r\n",Cartar.DertaVel);
-		
+		//printf("%.1f,%.1f,%.1f\r\n",carStat.Sita,Cartar.Tar_dis,Cartar.Tar_LBvel);		
         HAL_GPIO_TogglePin(LED_GPIO_Port,LED_Pin);
-        osDelay(80);
+        osDelay(100);
     }
   /* USER CODE END StartDefaultTask */
 }
@@ -298,9 +296,9 @@ void MoveControl(void *argument)
     const TickType_t xDelay = pdMS_TO_TICKS(1000); // 延迟1000毫秒
 
 	PidMlpi_Param_Init(&pidvel,5.5,1.0,0);
-    PidMlpi_Param_Init(&piddis,2.65,0,4);
-    PidMlpi_Param_Init(&pidCalidis,18 ,0.1,1);
-	PidParam_Init(&pidsita,1.5,0.01,4);
+    PidMlpi_Param_Init(&piddis,2.0,0,1.2);
+    PidMlpi_Param_Init(&pidCalidis,15,0.025,4);
+	PidParam_Init(&pidsita,3,0.01,4);
 
 
     while(mpuFlag) {
@@ -353,14 +351,11 @@ void MoveControl(void *argument)
 
         /*纵向标定*///&& (EnUpLidarDisTask==1)
         else if(TASKNUM == CalibraDis && (EnUpLidarDisTask==1) ) {
-            TaskOverFlag = CarDisCalibration(&Cartar,&carStat,&pidCalidis);
-
-            if(TaskOverFlag) {
-
+            TaskOverFlag += CarDisCalibration(&Cartar,&carStat,&pidCalidis);
+            if(TaskOverFlag>=5) {
                 EnUpLidarDisRead = 0;
                 EnUpLidarDisTask = 0;
                 TASKNUM = Free;
-
 
 				xTaskNotifyGive(DataSendTaskHandle);
 
@@ -387,6 +382,7 @@ void MoveControl(void *argument)
             Refresh_CarDis(&carStat);
             Refresh_Car(&Cartar,&OrderParam);
         }
+
 
         WheelVelSet(&Cartar,&carStat,&pidvel);
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
@@ -469,10 +465,6 @@ void OdarGet(void *argument)
         //指令4： 距离标定	dis
         //指令5： 角度标定  dis
         if(xSemaphoreTake(AnlayOderDataFlagHandle, portMAX_DELAY) == pdTRUE) {
-
-
-            //printf("OdarGet\r\n");
-
 
             // 检查最小有效长度：帧头 + | + 命令号 + 2个参数 + 帧尾
             size_t data_len = strlen((char*)ORDER_DATA);
