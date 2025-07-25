@@ -68,11 +68,14 @@ static float normalizeYaw(float yaw);
 static void BaseSitaUpdate(Car_Stat* carStat,SplitCarTargetParm* Cartar);
 
 /*lidar*/
+uint8_t Lidar_Receive_buf[1];
 u16 receive_cnt;
 u8 confidence;
 u16 distance,noise,reftof;
 u32 peak,intg;
-u8 dis;
+
+static uint8_t lidar_state = 0;
+static uint16_t lidar_distance = 0;
 
 LidarPointTypedef Pack_Data[12];
 LidarPointTypedef Pack_sum;
@@ -126,42 +129,42 @@ volatile int mpuFlag=1;
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
-  .name = "defaultTask",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityLow,
+    .name = "defaultTask",
+    .stack_size = 128 * 4,
+    .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for MoveControlTask */
 osThreadId_t MoveControlTaskHandle;
 const osThreadAttr_t MoveControlTask_attributes = {
-  .name = "MoveControlTask",
-  .stack_size = 256 * 4,
-  .priority = (osPriority_t) osPriorityAboveNormal,
+    .name = "MoveControlTask",
+    .stack_size = 256 * 4,
+    .priority = (osPriority_t) osPriorityAboveNormal,
 };
 /* Definitions for ReadMpuTask */
 osThreadId_t ReadMpuTaskHandle;
 const osThreadAttr_t ReadMpuTask_attributes = {
-  .name = "ReadMpuTask",
-  .stack_size = 256 * 4,
-  .priority = (osPriority_t) osPriorityNormal7,
+    .name = "ReadMpuTask",
+    .stack_size = 256 * 4,
+    .priority = (osPriority_t) osPriorityNormal7,
 };
 /* Definitions for OdarGetTask */
 osThreadId_t OdarGetTaskHandle;
 const osThreadAttr_t OdarGetTask_attributes = {
-  .name = "OdarGetTask",
-  .stack_size = 256 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
+    .name = "OdarGetTask",
+    .stack_size = 256 * 4,
+    .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for DataSendTask */
 osThreadId_t DataSendTaskHandle;
 const osThreadAttr_t DataSendTask_attributes = {
-  .name = "DataSendTask",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
+    .name = "DataSendTask",
+    .stack_size = 128 * 4,
+    .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for AnlayOderDataFlag */
 osSemaphoreId_t AnlayOderDataFlagHandle;
 const osSemaphoreAttr_t AnlayOderDataFlag_attributes = {
-  .name = "AnlayOderDataFlag"
+    .name = "AnlayOderDataFlag"
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -200,53 +203,53 @@ __weak unsigned long getRunTimeCounterValue(void)
   * @retval None
   */
 void MX_FREERTOS_Init(void) {
-  /* USER CODE BEGIN Init */
+    /* USER CODE BEGIN Init */
 
-  /* USER CODE END Init */
+    /* USER CODE END Init */
 
-  /* USER CODE BEGIN RTOS_MUTEX */
+    /* USER CODE BEGIN RTOS_MUTEX */
     /* add mutexes, ... */
-  /* USER CODE END RTOS_MUTEX */
+    /* USER CODE END RTOS_MUTEX */
 
-  /* Create the semaphores(s) */
-  /* creation of AnlayOderDataFlag */
-  AnlayOderDataFlagHandle = osSemaphoreNew(1, 0, &AnlayOderDataFlag_attributes);
+    /* Create the semaphores(s) */
+    /* creation of AnlayOderDataFlag */
+    AnlayOderDataFlagHandle = osSemaphoreNew(1, 0, &AnlayOderDataFlag_attributes);
 
-  /* USER CODE BEGIN RTOS_SEMAPHORES */
+    /* USER CODE BEGIN RTOS_SEMAPHORES */
     /* add semaphores, ... */
-  /* USER CODE END RTOS_SEMAPHORES */
+    /* USER CODE END RTOS_SEMAPHORES */
 
-  /* USER CODE BEGIN RTOS_TIMERS */
+    /* USER CODE BEGIN RTOS_TIMERS */
     /* start timers, add new ones, ... */
-  /* USER CODE END RTOS_TIMERS */
+    /* USER CODE END RTOS_TIMERS */
 
-  /* USER CODE BEGIN RTOS_QUEUES */
+    /* USER CODE BEGIN RTOS_QUEUES */
     /* add queues, ... */
-  /* USER CODE END RTOS_QUEUES */
+    /* USER CODE END RTOS_QUEUES */
 
-  /* Create the thread(s) */
-  /* creation of defaultTask */
-  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+    /* Create the thread(s) */
+    /* creation of defaultTask */
+    defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
-  /* creation of MoveControlTask */
-  MoveControlTaskHandle = osThreadNew(MoveControl, NULL, &MoveControlTask_attributes);
+    /* creation of MoveControlTask */
+    MoveControlTaskHandle = osThreadNew(MoveControl, NULL, &MoveControlTask_attributes);
 
-  /* creation of ReadMpuTask */
-  ReadMpuTaskHandle = osThreadNew(ReadMpu, NULL, &ReadMpuTask_attributes);
+    /* creation of ReadMpuTask */
+    ReadMpuTaskHandle = osThreadNew(ReadMpu, NULL, &ReadMpuTask_attributes);
 
-  /* creation of OdarGetTask */
-  OdarGetTaskHandle = osThreadNew(OdarGet, NULL, &OdarGetTask_attributes);
+    /* creation of OdarGetTask */
+    OdarGetTaskHandle = osThreadNew(OdarGet, NULL, &OdarGetTask_attributes);
 
-  /* creation of DataSendTask */
-  DataSendTaskHandle = osThreadNew(DataSend, NULL, &DataSendTask_attributes);
+    /* creation of DataSendTask */
+    DataSendTaskHandle = osThreadNew(DataSend, NULL, &DataSendTask_attributes);
 
-  /* USER CODE BEGIN RTOS_THREADS */
+    /* USER CODE BEGIN RTOS_THREADS */
     /* add threads, ... */
-  /* USER CODE END RTOS_THREADS */
+    /* USER CODE END RTOS_THREADS */
 
-  /* USER CODE BEGIN RTOS_EVENTS */
+    /* USER CODE BEGIN RTOS_EVENTS */
     /* add events, ... */
-  /* USER CODE END RTOS_EVENTS */
+    /* USER CODE END RTOS_EVENTS */
 
 }
 
@@ -259,19 +262,18 @@ void MX_FREERTOS_Init(void) {
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void *argument)
 {
-  /* USER CODE BEGIN StartDefaultTask */
+    /* USER CODE BEGIN StartDefaultTask */
 
     /* Infinite loop */
     for(;;)
     {
 
-        //printf("%.1f,%.1f,%.1f\r\n",carStat.Dis,Cartar.Tar_dis,Cartar.Tar_LBvel);		
-		
-		//printf("%.1f,%.1f,%.1f\r\n",carStat.Sita,Cartar.Tar_dis,Cartar.Tar_LBvel);		
+        //printf("%.1f,%.1f,%.1f\r\n",carStat.Dis,Cartar.Tar_dis,Cartar.Tar_LBvel);
+        //printf("%.1f,%.1f,%.1f\r\n",carStat.Sita,Cartar.Tar_dis,Cartar.Tar_LBvel);
         HAL_GPIO_TogglePin(LED_GPIO_Port,LED_Pin);
         osDelay(100);
     }
-  /* USER CODE END StartDefaultTask */
+    /* USER CODE END StartDefaultTask */
 }
 
 /* USER CODE BEGIN Header_MoveControl */
@@ -283,7 +285,7 @@ void StartDefaultTask(void *argument)
 /* USER CODE END Header_MoveControl */
 void MoveControl(void *argument)
 {
-  /* USER CODE BEGIN MoveControl */
+    /* USER CODE BEGIN MoveControl */
     TASKNUM =Free;
     Cartar.MaxVel = Def_Max_Vel;
 
@@ -295,10 +297,10 @@ void MoveControl(void *argument)
     const TickType_t xFrequency = pdMS_TO_TICKS(Ts*1000); // 10ms周期
     const TickType_t xDelay = pdMS_TO_TICKS(1000); // 延迟1000毫秒
 
-	PidMlpi_Param_Init(&pidvel,5.5,1.0,0);
+    PidMlpi_Param_Init(&pidvel,5.5,1.0,0);
     PidMlpi_Param_Init(&piddis,2.0,0,1.2);
     PidMlpi_Param_Init(&pidCalidis,15,0.025,4);
-	PidParam_Init(&pidsita,3,0.01,4);
+    PidParam_Init(&pidsita,3,0.01,4);
 
 
     while(mpuFlag) {
@@ -306,7 +308,7 @@ void MoveControl(void *argument)
     }
 
     TickType_t xLastWakeTime = xTaskGetTickCount();
-		
+
 
     /* Infinite loop */
     for(;;)
@@ -331,8 +333,8 @@ void MoveControl(void *argument)
 
             if(TaskOverFlag) {
                 TASKNUM = Free;
-				
-				xTaskNotifyGive(DataSendTaskHandle);
+
+                xTaskNotifyGive(DataSendTaskHandle);
 
             }
         }
@@ -343,40 +345,40 @@ void MoveControl(void *argument)
                 TaskOverFlag = 1;
                 BaseSitaUpdate(&carStat,&Cartar);//坐标系重置
                 TASKNUM = Free;
-				
-				xTaskNotifyGive(DataSendTaskHandle);
+
+                xTaskNotifyGive(DataSendTaskHandle);
 
             }
         }
 
-        /*纵向标定*///&& (EnUpLidarDisTask==1)
-        else if(TASKNUM == CalibraDis && (EnUpLidarDisTask==1) ) {
+        /*上位机雷达标定*/
+        else if(TASKNUM == CalibraUpLidarDis && (EnUpLidarDisTask==1) ) {
             TaskOverFlag += CarDisCalibration(&Cartar,&carStat,&pidCalidis);
             if(TaskOverFlag>=5) {
                 EnUpLidarDisRead = 0;
                 EnUpLidarDisTask = 0;
                 TASKNUM = Free;
 
-				xTaskNotifyGive(DataSendTaskHandle);
+                xTaskNotifyGive(DataSendTaskHandle);
 
             }
 
         }
 
-        /*角度横向标定*/
-        else if(TASKNUM == CalibraAngle) {
-            TaskOverFlag = CarSitaCalibration(&Cartar,&carStat,&pidsita);
-            if(TaskOverFlag) {
+        /*下位机激光标定*/
+        else if(TASKNUM == CalibraDownLidarDis) {
+            TaskOverFlag += CarDisCalibration(&Cartar,&carStat,&pidCalidis);
+
+            if(TaskOverFlag>=5) {
                 LidarUart_ISREN(0);
-                BaseSitaUpdate(&carStat,&Cartar);//坐标系重置
                 TASKNUM = Free;
-				
-				xTaskNotifyGive(DataSendTaskHandle);
+
+                xTaskNotifyGive(DataSendTaskHandle);
 
             }
 
         }
-
+ 
         /*空闲*/
         if(TASKNUM==Free) {
             Refresh_CarDis(&carStat);
@@ -387,7 +389,7 @@ void MoveControl(void *argument)
         WheelVelSet(&Cartar,&carStat,&pidvel);
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
     }
-  /* USER CODE END MoveControl */
+    /* USER CODE END MoveControl */
 }
 
 /* USER CODE BEGIN Header_ReadMpu */
@@ -399,7 +401,7 @@ void MoveControl(void *argument)
 /* USER CODE END Header_ReadMpu */
 void ReadMpu(void *argument)
 {
-  /* USER CODE BEGIN ReadMpu */
+    /* USER CODE BEGIN ReadMpu */
     float yaw;
     float fAcc[3], fGyro[3], fAngle[3];
     int i;
@@ -439,7 +441,7 @@ void ReadMpu(void *argument)
 
         osDelay(20);
     }
-  /* USER CODE END ReadMpu */
+    /* USER CODE END ReadMpu */
 }
 
 /* USER CODE BEGIN Header_OdarGet */
@@ -451,9 +453,8 @@ void ReadMpu(void *argument)
 /* USER CODE END Header_OdarGet */
 void OdarGet(void *argument)
 {
-  /* USER CODE BEGIN OdarGet */
+    /* USER CODE BEGIN OdarGet */
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-
 
     /* Infinite loop */
     for(;;)
@@ -512,30 +513,30 @@ void OdarGet(void *argument)
                 continue;
             }
 
-
             TaskOverFlag = 0;
             ResponseLidarGet = 0;
             EnUpLidarDisRead = 0;
             EnUpLidarDisTask = 0;
-
 
             switch(Task_type) {
             case 1: // 指定v,w: v,w
                 printf("[TASK1]: v=%.2f, w=%.2f\r\n", value1, value2);
                 OrderParam.Order_vel = value1;
                 OrderParam.Order_omeiga = value2;
-                TASKNUM = Nav2Interfaces;
                 Refresh_CarDis(&carStat);
                 Split_CarTarParam(&Cartar, &OrderParam);
+			
+				TASKNUM = Nav2Interfaces;
                 break;
 
             case 2: // 指定距离: max_v, dis
                 printf("[TASK2]: max_v=%.2f, dis=%.2f\r\n", value1, value2);
                 OrderParam.Order_MAXvel = value1;
                 OrderParam.Order_dis = value2;
-                TASKNUM = AheadSpDis;
                 Refresh_CarDis(&carStat);
                 Split_CarTarParam(&Cartar, &OrderParam);
+			
+				TASKNUM = AheadSpDis;
                 break;
 
             case 3: // 指定角度: max_v, sita
@@ -543,24 +544,21 @@ void OdarGet(void *argument)
                 if(fabs(value2) <= 180.0f) {
                     OrderParam.Order_MAXvel = value1;
                     OrderParam.Order_sita = value2;
-                    TASKNUM = RotateSpAngle;
                     Refresh_CarDis(&carStat);
                     Split_CarTarParam(&Cartar, &OrderParam);
-                } else {
-                    printf("TASK3]ERR: Angle out of range! %.1f°\n", value2);
-                }
+					
+					TASKNUM = RotateSpAngle;
+                } 
+				else printf("TASK3]ERR: Angle out of range! %.1f°\n", value2);
                 break;
 
-            case 4: // 距离标定: dis
-                printf("[TASK4]: CalibraDis=%.2f val:%.2f\r\n", value1,value2);
+            case 4: // 上位机距离标定: dis
+                printf("[TASK4]: CalibraUpLidarDis=%.2f val:%.2f\r\n", value1,value2);
                 OrderParam.Order_dis = value1;
                 OrderParam.Order_MAXvel = value2;
-                TASKNUM = CalibraDis;
+                TASKNUM = CalibraUpLidarDis;
                 Refresh_CarDis(&carStat);
                 Split_CarTarParam(&Cartar, &OrderParam);
-
-                TASKNUM = CalibraDis;
-
 
                 //唤醒DataSend响应lidar
                 ResponseLidarGet= 1;
@@ -569,39 +567,37 @@ void OdarGet(void *argument)
                     0,
                     eNoAction
                 );
+				TASKNUM = CalibraUpLidarDis;
                 break;
 
-            case 5: // 角度标定: dis
-                printf("[TASK5]: CalibraAngle=%.2f\r\n", value1);
+            case 5: // 下位机距离标定: dis
+                printf("[TASK5]: CalibraDownLidarDis=%.2f\r\n", value1,value2);
                 OrderParam.Order_dis = value1;
-                TASKNUM = CalibraAngle;
+				OrderParam.Order_MAXvel = value2;
                 Refresh_CarDis(&carStat);
                 Split_CarTarParam(&Cartar, &OrderParam);
                 LidarUart_ISREN(1); // 启用激光
+						
+				TASKNUM = CalibraDownLidarDis;
                 break;
-			
-			case 6: // 角度标定: dis
+
+            case 6: //调试
                 printf("[TASK6]: valdebug=%.2f\r\n", value1);
                 Cartar.RBvel = value1;
-				Cartar.RFvel = value1;
-				Cartar.LBvel = value1;
-				Cartar.LFvel = value1;
+                Cartar.RFvel = value1;
+                Cartar.LBvel = value1;
+                Cartar.LFvel = value1;
+                Cartar.MaxVel = 1000;
 			
-				Cartar.MaxVel = 1000;
                 break;
-			
 
             default:
                 printf("ERR: NO THIS TASK! %d\r\n", Task_type);
                 break;
             }
-
-
         }
-
-
     }
-  /* USER CODE END OdarGet */
+    /* USER CODE END OdarGet */
 }
 
 /* USER CODE BEGIN Header_DataSend */
@@ -613,11 +609,10 @@ void OdarGet(void *argument)
 /* USER CODE END Header_DataSend */
 void DataSend(void *argument)
 {
-  /* USER CODE BEGIN DataSend */
+    /* USER CODE BEGIN DataSend */
 
     uint8_t Done[] = "Done\r\n";
     uint8_t UpLidarAllowStart[] = "UpLidarAllowStart\r\n";
-
 
     /* Infinite loop */
     for(;;)
@@ -641,7 +636,7 @@ void DataSend(void *argument)
             EnUpLidarDisRead = 1;
         }
     }
-  /* USER CODE END DataSend */
+    /* USER CODE END DataSend */
 }
 
 /* Private application code --------------------------------------------------*/
@@ -649,8 +644,8 @@ void DataSend(void *argument)
 
 /*ISR*/
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-
-    //MPU
+    
+	//MPU
     if(huart==(&huart2) ) {
         WitSerialDataIn(mpu_tmp);
         HAL_UART_Receive_IT(&huart2,&mpu_tmp,1);
@@ -658,225 +653,72 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 
     //Lidar
     else if(huart == (&huart4)) {
-        static uint8_t state = 0;			//
-        static uint8_t crc = 0;				//
-        static uint8_t cnt = 0;				//
-        static uint8_t PACK_FLAG = 0;  //
-        static uint8_t data_len  = 0;  //
-        static uint32_t timestamp = 0; //
-        static uint8_t state_flag = 1; //
-        uint8_t temp_data;
-        temp_data=Lidar_Receive_buf[0];
-        if(state< 4)
-        {
-            if(temp_data == HEADER) state ++;
-            else state = 0;
-        }
-        else if(state<10&&state>3)
-        {
-            switch(state)
-            {
-            case 4:
-                if(temp_data == device_address)              /* �豸��ַ��֤ */
-                {
-                    state ++;
-                    crc = crc + temp_data;
-                    break;
-                }
-                else state = 0,crc = 0;
-            case 5:
-                if(temp_data == PACK_GET_DISTANCE)					 /* ��ȡ������������ */
-                {
-                    PACK_FLAG = PACK_GET_DISTANCE;
-                    state ++;
-                    crc = crc + temp_data;
-                    break;
-                }
+        uint8_t temp_data = Lidar_Receive_buf[0];
 
-                else if(temp_data == PACK_RESET_SYSTEM) 		 /* ��λ���� */
-                {
-                    PACK_FLAG = PACK_RESET_SYSTEM;
-                    state ++;
-                    crc = crc + temp_data;
-                    break;
-                }
-                else if(temp_data == PACK_STOP)							 /* ֹͣ�������ݴ������� */
-                {
-                    PACK_FLAG = PACK_STOP;
-                    state ++;
-                    crc = crc + temp_data;
-                    break;
-                }
-                else if(temp_data == PACK_ACK)							 /* Ӧ�������� */
-                {
-                    PACK_FLAG = PACK_ACK;
-                    state ++;
-                    crc = crc + temp_data;
-                    break;
-                }
-                else if(temp_data == PACK_VERSION)					 /* ��ȡ��������Ϣ���� */
-                {
-                    PACK_FLAG = PACK_VERSION,
-                    state ++,
-                    crc = crc + temp_data;
-                    break;
-                }
-                else state = 0,crc = 0;
-            case 6:
-                if(temp_data == chunk_offset)          /* ƫ�Ƶ�ַ */
-                {
-                    state ++;
-                    crc = crc + temp_data;
-                    break;
-                }
-                else state = 0,crc = 0;
-            case 7:
-                if(temp_data == chunk_offset)
-                {
-                    state ++;
-                    crc = crc + temp_data;
-                    break;
-                }
-                else state = 0,crc = 0;
-            case 8:
-                data_len = (u16)temp_data;								 /* ���ݳ��ȵͰ�λ */
-                state ++;
-                crc = crc + temp_data;
-                break;
-            case 9:
-                data_len = data_len + ((u16)temp_data<<8); 			 /* ���ݳ��ȸ߰�λ */
-                state ++;
-                crc = crc + temp_data;
-                break;
-            default:
-                break;
+        // 状态机处理
+        switch(lidar_state) {
+        // 帧头检测 (0-3状态)
+        case 0:
+        case 1:
+        case 2:
+        case 3:
+            if(temp_data == HEADER) {
+                lidar_state++;
+            } else {
+                lidar_state = 0;
             }
-        }
-        else if(state == 10 ) state_flag = 0;                    /*��switch������ʱstateΪ10����temp_data��Ϊ���볤�ȸ߰�λ���ݣ�������һ���ж�*/
-        if(PACK_FLAG == PACK_GET_DISTANCE&&state_flag == 0)      /* ��ȡһ֡���ݲ�У�� */
-        {
-            if(state>9)
-            {
-                if(state<190)
-                {
-                    static uint8_t state_num;
-                    state_num = (state-10)%15;
-                    switch(state_num)
-                    {
-                    case 0:
-                        Pack_Data[cnt].distance = (uint16_t)temp_data ;				 /* �������ݵͰ�λ */
-                        crc = crc + temp_data;
-                        state++;
-                        break;
-                    case 1:
-                        Pack_Data[cnt].distance = ((u16)temp_data<<8) + Pack_Data[cnt].distance;	 /* �������� */
-                        crc = crc + temp_data;
-                        state++;
-                        break;
-                    case 2:
-                        Pack_Data[cnt].noise = (u16)temp_data;				 /* ���������Ͱ�λ */
-                        crc = crc + temp_data;
-                        state++;
-                        break;
-                    case 3:
-                        Pack_Data[cnt].noise = ((u16)temp_data<<8) + Pack_Data[cnt].noise;				 /* �������� */
-                        crc = crc + temp_data;
-                        state++;
-                        break;
-                    case 4:
-                        Pack_Data[cnt].peak = (u32)temp_data;				 										 /* ����ǿ����Ϣ�Ͱ�λ */
-                        crc = crc + temp_data;
-                        state++;
-                        break;
-                    case 5:
-                        Pack_Data[cnt].peak = ((u32)temp_data<<8) + Pack_Data[cnt].peak;
-                        crc = crc + temp_data;
-                        state++;
-                        break;
-                    case 6:
-                        Pack_Data[cnt].peak = ((u32)temp_data<<16) + Pack_Data[cnt].peak;
-                        crc = crc + temp_data;
-                        state++;
-                        break;
-                    case 7:
-                        Pack_Data[cnt].peak = ((u32)temp_data<<24) + Pack_Data[cnt].peak;				    /* ����ǿ����Ϣ */
-                        crc = crc + temp_data;
-                        state++;
-                        break;
-                    case 8:
-                        Pack_Data[cnt].confidence = temp_data;				 /* ���Ŷ� */
-                        crc = crc + temp_data;
-                        state++;
-                        break;
-                    case 9:
-                        Pack_Data[cnt].intg = (u32)temp_data;															/* ���ִ����Ͱ�λ */
-                        crc = crc + temp_data;
-                        state++;
-                        break;
-                    case 10:
-                        Pack_Data[cnt].intg = ((u32)temp_data<<8) + Pack_Data[cnt].intg;
-                        crc = crc + temp_data;
-                        state++;
-                        break;
-                    case 11:
-                        Pack_Data[cnt].intg = ((u32)temp_data<<16) + Pack_Data[cnt].intg;
-                        crc = crc + temp_data;
-                        state++;
-                        break;
-                    case 12:
-                        Pack_Data[cnt].intg = ((u32)temp_data<<24) + Pack_Data[cnt].intg;				  	 /* ���ִ��� */
-                        crc = crc + temp_data;
-                        state++;
-                        break;
-                    case 13:
-                        Pack_Data[cnt].reftof = (int16_t)temp_data;				 								 /* �¶ȱ���ֵ�Ͱ�λ */
-                        crc = crc + temp_data;
-                        state++;
-                        break;
-                    case 14:
-                        Pack_Data[cnt].reftof = ((int16_t)temp_data<<8) +Pack_Data[cnt].reftof;			/* �¶ȱ���ֵ */
-                        crc = crc + temp_data;
-                        state++;
-                        cnt++;							 /* ������һ�������� */
-                        break;
-                    default:
-                        break;
-                    }
-                }
-                if(state == 191) timestamp = temp_data,state++,crc = crc + temp_data;
-                else if(state == 192) timestamp = ((u32)temp_data<<8) + timestamp,state++,crc = crc + temp_data;
-                else if(state == 193) timestamp = ((u32)temp_data<<16) + timestamp,state++,crc = crc + temp_data;
-                else if(state == 194) timestamp = ((u32)temp_data<<24) + timestamp,state++,crc = crc + temp_data;
-                else if(state==195)
-                {
-                    if(temp_data == crc)
-                    {
-                        data_process();
-                        receive_cnt++;	 	 /* ������յ���ȷ���ݵĴ��� */
-                    }
-                    distance = Pack_Data[0].distance;
-                    crc = 0;
-                    state = 0;
-                    state_flag = 1;
-                    cnt = 0; 							 /* ��λ*/
-                }
-                if(state == 190) state++;
+            break;
 
+        // 设备地址检测 (状态4)
+        case 4:
+            if(temp_data == device_address) {
+                lidar_state++;
+            } else {
+                lidar_state = 0;
             }
+            break;
+
+        // 包类型检测 (状态5)
+        case 5:
+            if(temp_data == PACK_GET_DISTANCE) {
+                lidar_state++;
+            } else {
+                lidar_state = 0; // 非距离包，重置状态机
+            }
+            break;
+
+        // 跳过不必要数据 (状态6-9)
+        case 6:
+        case 7:
+        case 8:
+        case 9:
+            lidar_state++;
+            break;
+
+        // 距离低字节 (状态10)
+        case 10:
+            lidar_distance = temp_data; // 存储低字节
+            lidar_state++;
+            break;
+
+        // 距离高字节 (状态11)
+        case 11:
+            lidar_distance |= (temp_data << 8); // 组合高字节
+			carStat.FrontLidarCaliDis = lidar_distance;
+            lidar_state = 0; // 重置状态机
+
+            break;
+
+        default:
+            lidar_state = 0;
+            break;
         }
-        HAL_UART_Receive_IT(&huart4,Lidar_Receive_buf,sizeof(Lidar_Receive_buf));//����5�ص�����ִ�����֮����Ҫ�ٴο��������жϵȴ���һ�ν����жϵķ���
-
-
+        // 重启接收
+        HAL_UART_Receive_IT(&huart4, Lidar_Receive_buf, sizeof(Lidar_Receive_buf));
     }
 
 
-
 }
-
-
-
-
-
 
 int cnt_ = 0;
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
@@ -890,35 +732,31 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
 
         //lidar
         if((ORDER_DATA[0] == '|')) {
-			
-			if(EnUpLidarDisRead) {
-				cnt_+=1;
-				float dis;
-				int parsed = sscanf((char*)ORDER_DATA, "|%f|", &dis);
-				carStat.FrontLidarCaliDis = dis;
-				if(cnt_>=10) {
-					EnUpLidarDisTask = 1;
-					cnt_=0;
-				}
-			}
 
-			else {
-				printf("unget uplidartask\r\n");
-			}
+            if(EnUpLidarDisRead) {
+                cnt_+=1;
+                float dis;
+                int parsed = sscanf((char*)ORDER_DATA, "|%f|", &dis);
+                carStat.FrontLidarCaliDis = dis;
+                if(cnt_>=10) {
+                    EnUpLidarDisTask = 1;
+                    cnt_=0;
+                }
+            }
+
+            else {
+                printf("unget uplidartask\r\n");
+            }
 
         }
 
-        else if(ORDER_DATA[0] == '@') {            
-			xSemaphoreGiveFromISR(AnlayOderDataFlagHandle, &xHigherPriorityTaskWoken);
+        else if(ORDER_DATA[0] == '@') {
+            xSemaphoreGiveFromISR(AnlayOderDataFlagHandle, &xHigherPriorityTaskWoken);
             portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
         }
 
     }
 }
-
-
-
-
 
 
 
@@ -1132,73 +970,6 @@ static void AutoScanSensor(void)
     printf("please check your connection\r\n");
 }
 
-
-static void SendData(float value) {
-
-    uint8_t buffer[4];
-    buffer[0] = *((uint8_t*)&(value));
-    buffer[1] = *((uint8_t*)&(value) + 1);
-    buffer[2] = *((uint8_t*)&(value) + 2);
-    buffer[3] = *((uint8_t*)&(value) + 3);
-    HAL_UART_Transmit_DMA(&huart3, buffer, sizeof(buffer));
-
-}
-
-
-static void Debug_Acutal_Dis() {
-    //目标距离
-    printf("tar:%f		actual:%f  \r\n",Cartar.Tar_dis,carStat.Dis);
-}
-static void Debug_Tar_Dis() {
-    //实时距离
-    printf("%f		%f		%f		%f\r\n",carStat.motorStat.LeftFrt.dis,
-           carStat.motorStat.leftBack.dis,
-           carStat.motorStat.RigFrt.dis,
-           carStat.motorStat.RigBack.dis
-          );
-
-}
-static void Debug_Acutal_Vel() {
-    //实时速度
-    printf("%f		%f		%f		%f\r\n",(carStat.motorStat.LeftFrt.vel),
-           (carStat.motorStat.leftBack.vel),
-           (carStat.motorStat.RigFrt.vel),
-           (carStat.motorStat.RigBack.vel));
-}
-static void Debug_Tar_Vel() {
-    //目标速度
-    printf("%f		%f		%f		%f\r\n",(Cartar.Tar_LBvel),
-           (Cartar.Tar_LFvel),
-           (Cartar.Tar_RBvel),
-           (Cartar.Tar_RFvel));
-}
-
-static void Debug_mpu() {
-
-}
-
-static void Debug_Odom() {
-    printf("%f\r\n",carStat.Odom);
-
-}
-
-/*
-	task name		task 当前状态 	 													task 优先级   				最小剩余 task 栈空间
-
-					X: running     正在运行 			 								越大优先级越高	    剩余！
-					B: blocked    等待（自动，osdelay,二值等待）
-					R: ready        就绪
-					D: deleted     删除
-					S: suspended挂起（手动）
-*/
-static void Debug_taskStat() {
-    char InfoBuffer[200];
-    vTaskList(InfoBuffer);
-    printf("taskName ttaskState ttaskPrio ttaskStack ttaskNum\r\n");
-    printf("%s",InfoBuffer);
-    printf("\r\n");
-    printf("\r\n");
-}
 
 /* USER CODE END Application */
 
