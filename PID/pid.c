@@ -29,29 +29,88 @@ float roundToTwoDecimals(float num) {
 **			 carstat: [输入/出] 
 **			 dispid: [输入/出] 
 /* -------------------------------- end -------------------------------- */
+int CarDisCalibrationStable(SplitCarTargetParm* carTar,Car_Stat* carstat,PidCar* dispid){
+	
+	float lf,lb,rb,rf,err;
+	
+	//err
+	err = carTar->Tar_dis-(carstat->FrontLidarCaliDis);
+		
+	//判定
+	if((fastest_fabsf(err) <= 1)) return 1;	
+	
+	else{
+	
+		
+		if (fastest_fabsf(err) >= 300.0f) {
+			float speed = err > 0 ? 20.0f : -20.0f;
+			// 大正误差区：全速前进
+			lf = lb = rb = rf = speed;
+		} 
+		
+		else if (fastest_fabsf(err) >= 150.0f) {
+			// 中等误差区：中等速度
+			float speed = err > 0 ? 15.0f : -15.0f;
+			lf = lb = rb = rf = speed;
+		}
+		else if (fastest_fabsf(err) >= 30.0f) {
+			// 小误差区：低速
+			float speed = err > 0 ? 13.0f : -13.0f;
+			lf = lb = rb = rf = speed;
+		}
+	
+		//pid调控
+		else{
+			lf  = __Realize_PID(&dispid->lf,err);
+			lb	=__Realize_PID(&dispid->lb,err);
+			rb	=__Realize_PID(&dispid->rb,err);
+			rf	=__Realize_PID(&dispid->rf,err);
+		}
+	
+		__carStatVel_Update(carTar,
+		ABS_CLAMP(lf,(carTar->MaxVel)),
+		ABS_CLAMP(lb,(carTar->MaxVel)),
+		ABS_CLAMP(rb,(carTar->MaxVel)),
+		ABS_CLAMP(rf,(carTar->MaxVel))		
+		);
+
+	}
+
+	return 0;
+}
+
+
 int CarDisCalibration(SplitCarTargetParm* carTar,Car_Stat* carstat,PidCar* dispid){
 	
-	float lf,lb,rb,rf;
-	//err
-	float err = (carstat->FrontLidarCaliDis)-carTar->Tar_dis;
+	float lf,lb,rb,rf,err;
 	
+	//err
+	err = (carstat->FrontLidarCaliDis)-carTar->Tar_dis;
+		
 	//判定
 	if((fastest_fabsf(err) <= 0.02f)) return 1;	
 	
 	else{
 	
-		if(err>=2){
-			lf = 25;
-			lb = 25;
-			rb = 25;
-			rf = 25;
+		if (fastest_fabsf(err) >= 10.0f) {
+			float speed = err > 0 ? 15.0f : -15.0f;
+			// 大正误差区：全速前进
+			lf = lb = rb = rf = speed;
+		} 
+		
+		else if (fastest_fabsf(err) > 5.0f) {
+			// 小误差区：低速
+			float speed = err > 0 ? 13.0f : -13.0f;
+			lf = lb = rb = rf = speed;
 		}
-		else if(err<=-2) {
-			lf = -25;
-			lb = -25;
-			rb = -25;
-			rf = -25;
+		
+		else if (fastest_fabsf(err) > 1.0f) {
+			// 小误差区：低速
+			float speed = err > 0 ? 10.0f : -10.0f;
+			lf = lb = rb = rf = speed;
 		}
+		
+		
 		else{
 			lf  = __Realize_PID(&dispid->lf,err);
 			lb	=__Realize_PID(&dispid->lb,err);

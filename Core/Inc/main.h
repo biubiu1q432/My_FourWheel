@@ -160,8 +160,8 @@ enum MoveTaskNum {
     Nav2Interfaces,    // 默认值0
     AheadSpDis,    // 自动赋值为1
 	RotateSpAngle,  // 自动赋值为2
-	CalibraUpLidarDis,
-	CalibraDownLidarDis,
+	CalibraUpLidarDis,//3
+	CalibraDownLidarDis,//4
 	Free
 };
 

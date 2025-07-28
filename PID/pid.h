@@ -41,7 +41,7 @@ int CarDisSet(SplitCarTargetParm* carTar,Car_Stat* carstat,PidCar* dispid);
 int CarSitaSet(SplitCarTargetParm* carTar,Car_Stat* carstat,PidWheel* sitapid);
 int CarDisCalibration(SplitCarTargetParm* carTar,Car_Stat* carstat,PidCar* dispid);
 int CarSitaCalibration(SplitCarTargetParm* carTar,Car_Stat* carstat,PidWheel* sitapid);
-
+int CarDisCalibrationStable(SplitCarTargetParm* carTar,Car_Stat* carstat,PidCar* dispid);
 #endif
 
 

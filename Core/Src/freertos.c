@@ -104,6 +104,7 @@ enum  MoveTaskNum TASKNUM;
 PidCar pidvel;
 PidCar piddis;
 PidCar pidCalidis;
+PidCar pidCalidisDown;
 
 PidWheel pidsita;
 
@@ -119,7 +120,6 @@ volatile int TaskOverFlag=0;
 volatile int ResponseLidarGet=0;
 volatile int EnUpLidarDisRead=0;
 volatile int EnUpLidarDisTask=0;
-
 
 volatile int mpuFlag=1;
 
@@ -267,7 +267,8 @@ void StartDefaultTask(void *argument)
     /* Infinite loop */
     for(;;)
     {
-
+        //printf("%d,%.1f,%.1f\r\n",carStat.FrontLidarCaliDis,Cartar.Tar_dis,Cartar.Tar_LBvel);
+		printf("%d\r\n",lidar_distance);
         //printf("%.1f,%.1f,%.1f\r\n",carStat.Dis,Cartar.Tar_dis,Cartar.Tar_LBvel);
         //printf("%.1f,%.1f,%.1f\r\n",carStat.Sita,Cartar.Tar_dis,Cartar.Tar_LBvel);
         HAL_GPIO_TogglePin(LED_GPIO_Port,LED_Pin);
@@ -299,8 +300,13 @@ void MoveControl(void *argument)
 
     PidMlpi_Param_Init(&pidvel,5.5,1.0,0);
     PidMlpi_Param_Init(&piddis,2.0,0,1.2);
-    PidMlpi_Param_Init(&pidCalidis,15,0.025,4);
     PidParam_Init(&pidsita,3,0.01,4);
+	
+	
+	//PidMlpi_Param_Init(&pidCalidis,15,0.025,4);
+	PidMlpi_Param_Init(&pidCalidis,10,0.05,4);
+	PidMlpi_Param_Init(&pidCalidisDown,0.4,0.01,1.5);
+
 
 
     while(mpuFlag) {
@@ -360,23 +366,19 @@ void MoveControl(void *argument)
                 TASKNUM = Free;
 
                 xTaskNotifyGive(DataSendTaskHandle);
-
             }
-
         }
 
         /*下位机激光标定*/
         else if(TASKNUM == CalibraDownLidarDis) {
-            TaskOverFlag += CarDisCalibration(&Cartar,&carStat,&pidCalidis);
+            TaskOverFlag += CarDisCalibrationStable(&Cartar,&carStat,&pidCalidisDown);
 
             if(TaskOverFlag>=5) {
                 LidarUart_ISREN(0);
                 TASKNUM = Free;
 
                 xTaskNotifyGive(DataSendTaskHandle);
-
             }
-
         }
  
         /*空闲*/
@@ -384,7 +386,6 @@ void MoveControl(void *argument)
             Refresh_CarDis(&carStat);
             Refresh_Car(&Cartar,&OrderParam);
         }
-
 
         WheelVelSet(&Cartar,&carStat,&pidvel);
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
