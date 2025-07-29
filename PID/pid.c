@@ -34,7 +34,7 @@ int CarDisCalibrationStable(SplitCarTargetParm* carTar,Car_Stat* carstat,PidCar*
 	float lf,lb,rb,rf,err;
 	
 	//err
-	err = carTar->Tar_dis-(carstat->FrontLidarCaliDis);
+	err = (carstat->FrontLidarCaliDis)-carTar->Tar_dis;
 		
 	//判定
 	if((fastest_fabsf(err) <= 1)) return 1;	
@@ -50,12 +50,12 @@ int CarDisCalibrationStable(SplitCarTargetParm* carTar,Car_Stat* carstat,PidCar*
 		
 		else if (fastest_fabsf(err) >= 150.0f) {
 			// 中等误差区：中等速度
-			float speed = err > 0 ? 15.0f : -15.0f;
+			float speed = err > 0 ? 13.0f : -13.0f;
 			lf = lb = rb = rf = speed;
 		}
 		else if (fastest_fabsf(err) >= 30.0f) {
 			// 小误差区：低速
-			float speed = err > 0 ? 13.0f : -13.0f;
+			float speed = err > 0 ? 8.0f : -8.0f;
 			lf = lb = rb = rf = speed;
 		}
 	

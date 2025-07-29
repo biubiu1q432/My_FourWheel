@@ -267,13 +267,13 @@ void StartDefaultTask(void *argument)
     /* Infinite loop */
     for(;;)
     {
-        //printf("%d,%.1f,%.1f\r\n",carStat.FrontLidarCaliDis,Cartar.Tar_dis,Cartar.Tar_LBvel);
-		printf("%d\r\n",lidar_distance);
+        //printf("%d,%.1f\r\n",carStat.FrontLidarCaliDis,Cartar.Tar_LBvel);
+		//printf("%d\r\n",lidar_distance);
         //printf("%.1f,%.1f,%.1f\r\n",carStat.Dis,Cartar.Tar_dis,Cartar.Tar_LBvel);
         //printf("%.1f,%.1f,%.1f\r\n",carStat.Sita,Cartar.Tar_dis,Cartar.Tar_LBvel);
         HAL_GPIO_TogglePin(LED_GPIO_Port,LED_Pin);
         osDelay(100);
-    }
+    }                  
     /* USER CODE END StartDefaultTask */
 }
 
@@ -305,7 +305,7 @@ void MoveControl(void *argument)
 	
 	//PidMlpi_Param_Init(&pidCalidis,15,0.025,4);
 	PidMlpi_Param_Init(&pidCalidis,10,0.05,4);
-	PidMlpi_Param_Init(&pidCalidisDown,0.4,0.01,1.5);
+	PidMlpi_Param_Init(&pidCalidisDown,0.22,0.01,2);
 
 
 
@@ -410,7 +410,7 @@ void ReadMpu(void *argument)
     int ReadMpu=0;
     static int CntFlag=1;
 
-    MPU_Usart_Init(9600);
+    MPU_Usart_Init(115200);
 
     WitInit(WIT_PROTOCOL_NORMAL, 0x50);//初始化JY61
     WitSerialWriteRegister(SensorUartSend); //注册写回调函数
@@ -427,7 +427,6 @@ void ReadMpu(void *argument)
             fAngle[2] = sReg[Roll+2] / 32768.0f * 180.0f;
             if(s_cDataUpdate & ANGLE_UPDATE) {
                 s_cDataUpdate &= ~ANGLE_UPDATE;
-
 
                 carStat.AbsSita = fAngle[2];//绝对
                 carStat.Sita = normalizeYaw(fAngle[2] - carStat.baseSita);//相对
