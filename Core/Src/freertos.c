@@ -267,12 +267,12 @@ void StartDefaultTask(void *argument)
     /* Infinite loop */
     for(;;)
     {
-        //printf("%d,%.1f\r\n",carStat.FrontLidarCaliDis,Cartar.Tar_LBvel);
+        //printf("%d,%f\r\n",carStat.SideLidarCaliDis,Cartar.Tar_LBvel);
 		//printf("%d\r\n",lidar_distance);
         //printf("%.1f,%.1f,%.1f\r\n",carStat.Dis,Cartar.Tar_dis,Cartar.Tar_LBvel);
-        //printf("%.1f,%.1f,%.1f\r\n",carStat.Sita,Cartar.Tar_dis,Cartar.Tar_LBvel);
+        //printf("%.1f\r\n",carStat.Sita);
         HAL_GPIO_TogglePin(LED_GPIO_Port,LED_Pin);
-        osDelay(100);
+        osDelay(80);
     }                  
     /* USER CODE END StartDefaultTask */
 }
@@ -300,13 +300,11 @@ void MoveControl(void *argument)
 
     PidMlpi_Param_Init(&pidvel,5.5,1.0,0);
     PidMlpi_Param_Init(&piddis,2.0,0,1.2);
-    PidParam_Init(&pidsita,3,0.01,4);
+    PidParam_Init(&pidsita,2.85,0.008,4);
 	
 	
-	//PidMlpi_Param_Init(&pidCalidis,15,0.025,4);
 	PidMlpi_Param_Init(&pidCalidis,10,0.05,4);
-	PidMlpi_Param_Init(&pidCalidisDown,0.22,0.01,2);
-
+	PidMlpi_Param_Init(&pidCalidisDown,0.12,0.0002,1);
 
 
     while(mpuFlag) {
@@ -360,7 +358,7 @@ void MoveControl(void *argument)
         /*上位机雷达标定*/
         else if(TASKNUM == CalibraUpLidarDis && (EnUpLidarDisTask==1) ) {
             TaskOverFlag += CarDisCalibration(&Cartar,&carStat,&pidCalidis);
-            if(TaskOverFlag>=5) {
+            if(TaskOverFlag>=3) {
                 EnUpLidarDisRead = 0;
                 EnUpLidarDisTask = 0;
                 TASKNUM = Free;
@@ -410,7 +408,7 @@ void ReadMpu(void *argument)
     int ReadMpu=0;
     static int CntFlag=1;
 
-    MPU_Usart_Init(115200);
+    MPU_Usart_Init(9600);
 
     WitInit(WIT_PROTOCOL_NORMAL, 0x50);//初始化JY61
     WitSerialWriteRegister(SensorUartSend); //注册写回调函数
@@ -704,7 +702,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
         // 距离高字节 (状态11)
         case 11:
             lidar_distance |= (temp_data << 8); // 组合高字节
-			carStat.FrontLidarCaliDis = lidar_distance;
+			carStat.SideLidarCaliDis = lidar_distance;
             lidar_state = 0; // 重置状态机
 
             break;
@@ -836,7 +834,6 @@ void CopeCmdData(unsigned char ucData)
     }
 
 }
-
 
 
 static void CmdProcess(void)

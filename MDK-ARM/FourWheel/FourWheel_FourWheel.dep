@@ -51,7 +51,7 @@ I (../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h)(0x682AC
 I (../Core/Inc/dma.h)(0x687F7C46)
 I (../Core/Inc/usart.h)(0x687F7C46)
 I (../Core/Inc/gpio.h)(0x687F7C46)
-I (../HARDWARE/motor/motor.h)(0x687F7C48)
+I (../HARDWARE/motor/motor.h)(0x6888E962)
 F (../Core/Src/gpio.c)(0x68821565)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include -I ../HARDWARE/motor -I ../PID -I ../Fliter -I ../SYSTEM -I ../HARDWARE/MPU-I.\RTE\_FourWheel-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include-IC:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.17.1\Drivers\CMSIS\Device\ST\STM32F4xx\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F407xx -DUSE_HAL_DRIVER -DSTM32F407xx -D__FPU_PRESENT="1U" -DARM_MATH_CM4 -D__CC_ARM -D__TARGET_FPU_VFP-o fourwheel\gpio.o --omf_browse fourwheel\gpio.crf --depend fourwheel\gpio.d)
 I (../Core/Inc/gpio.h)(0x687F7C46)
 I (../Core/Inc/main.h)(0x6884C58A)
@@ -90,7 +90,7 @@ I (C:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include\arm_math.h)(0x5898498A)
 I (C:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include\core_cm4.h)(0x5898498A)
 I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x588B8344)
 I (C:\Keil_v5\ARM\ARMCC\include\math.h)(0x588B8344)
-F (../Core/Src/freertos.c)(0x68887FCC)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include -I ../HARDWARE/motor -I ../PID -I ../Fliter -I ../SYSTEM -I ../HARDWARE/MPU-I.\RTE\_FourWheel-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include-IC:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.17.1\Drivers\CMSIS\Device\ST\STM32F4xx\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F407xx -DUSE_HAL_DRIVER -DSTM32F407xx -D__FPU_PRESENT="1U" -DARM_MATH_CM4 -D__CC_ARM -D__TARGET_FPU_VFP-o fourwheel\freertos.o --omf_browse fourwheel\freertos.crf --depend fourwheel\freertos.d)
+F (../Core/Src/freertos.c)(0x6888EAFA)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include -I ../HARDWARE/motor -I ../PID -I ../Fliter -I ../SYSTEM -I ../HARDWARE/MPU-I.\RTE\_FourWheel-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include-IC:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.17.1\Drivers\CMSIS\Device\ST\STM32F4xx\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F407xx -DUSE_HAL_DRIVER -DSTM32F407xx -D__FPU_PRESENT="1U" -DARM_MATH_CM4 -D__CC_ARM -D__TARGET_FPU_VFP-o fourwheel\freertos.o --omf_browse fourwheel\freertos.crf --depend fourwheel\freertos.d)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h)(0x682ACA58)
 I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x588B8344)
 I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x588B8344)
@@ -138,7 +138,7 @@ I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x588B8344)
 I (C:\Keil_v5\ARM\ARMCC\include\math.h)(0x588B8344)
 I (../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os.h)(0x682ACA58)
 I (../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h)(0x682ACA58)
-I (../HARDWARE/motor/motor.h)(0x687F7C48)
+I (../HARDWARE/motor/motor.h)(0x6888E962)
 I (../PID/pid.h)(0x6884CF5B)
 I (../Fliter/lowpass_filter.h)(0x687F7C48)
 I (../Core/Inc/usart.h)(0x687F7C46)
@@ -1067,9 +1067,9 @@ I (../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/portmacro.h
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h)(0x682ACA58)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/task.h)(0x682ACA58)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/list.h)(0x682ACA58)
-F (..\HARDWARE\motor\motor.h)(0x687F7C48)()
+F (..\HARDWARE\motor\motor.h)(0x6888E962)()
 F (..\HARDWARE\motor\motor.c)(0x68821744)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include -I ../HARDWARE/motor -I ../PID -I ../Fliter -I ../SYSTEM -I ../HARDWARE/MPU-I.\RTE\_FourWheel-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include-IC:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.17.1\Drivers\CMSIS\Device\ST\STM32F4xx\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F407xx -DUSE_HAL_DRIVER -DSTM32F407xx -D__FPU_PRESENT="1U" -DARM_MATH_CM4 -D__CC_ARM -D__TARGET_FPU_VFP-o fourwheel\motor.o --omf_browse fourwheel\motor.crf --depend fourwheel\motor.d)
-I (..\HARDWARE\motor\motor.h)(0x687F7C48)
+I (..\HARDWARE\motor\motor.h)(0x6888E962)
 I (../Core/Inc/main.h)(0x6884C58A)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h)(0x682ACAAB)
 I (../Core/Inc/stm32f4xx_hal_conf.h)(0x687F7C46)
@@ -1116,7 +1116,7 @@ I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x588B8344)
 I (..\HARDWARE\MPU\REG.h)(0x687F7C48)
 F (..\HARDWARE\MPU\mpu.h)(0x687F7C48)()
 F (..\HARDWARE\MPU\REG.h)(0x687F7C48)()
-F (..\PID\pid.c)(0x68887FC3)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include -I ../HARDWARE/motor -I ../PID -I ../Fliter -I ../SYSTEM -I ../HARDWARE/MPU-I.\RTE\_FourWheel-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include-IC:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.17.1\Drivers\CMSIS\Device\ST\STM32F4xx\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F407xx -DUSE_HAL_DRIVER -DSTM32F407xx -D__FPU_PRESENT="1U" -DARM_MATH_CM4 -D__CC_ARM -D__TARGET_FPU_VFP-o fourwheel\pid.o --omf_browse fourwheel\pid.crf --depend fourwheel\pid.d)
+F (..\PID\pid.c)(0x6888EAF4)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include -I ../HARDWARE/motor -I ../PID -I ../Fliter -I ../SYSTEM -I ../HARDWARE/MPU-I.\RTE\_FourWheel-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include-IC:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.17.1\Drivers\CMSIS\Device\ST\STM32F4xx\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F407xx -DUSE_HAL_DRIVER -DSTM32F407xx -D__FPU_PRESENT="1U" -DARM_MATH_CM4 -D__CC_ARM -D__TARGET_FPU_VFP-o fourwheel\pid.o --omf_browse fourwheel\pid.crf --depend fourwheel\pid.d)
 I (..\PID\pid.h)(0x6884CF5B)
 I (../Core/Inc/main.h)(0x6884C58A)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h)(0x682ACAAB)
@@ -1154,7 +1154,7 @@ I (C:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include\arm_math.h)(0x5898498A)
 I (C:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include\core_cm4.h)(0x5898498A)
 I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x588B8344)
 I (C:\Keil_v5\ARM\ARMCC\include\math.h)(0x588B8344)
-I (../HARDWARE/motor/motor.h)(0x687F7C48)
+I (../HARDWARE/motor/motor.h)(0x6888E962)
 F (..\PID\pid.h)(0x6884CF5B)()
 F (..\Fliter\lowpass_filter.c)(0x687F7C48)(--c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include -I ../HARDWARE/motor -I ../PID -I ../Fliter -I ../SYSTEM -I ../HARDWARE/MPU-I.\RTE\_FourWheel-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include-IC:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.17.1\Drivers\CMSIS\Device\ST\STM32F4xx\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F407xx -DUSE_HAL_DRIVER -DSTM32F407xx -D__FPU_PRESENT="1U" -DARM_MATH_CM4 -D__CC_ARM -D__TARGET_FPU_VFP-o fourwheel\lowpass_filter.o --omf_browse fourwheel\lowpass_filter.crf --depend fourwheel\lowpass_filter.d)
 I (..\Fliter\lowpass_filter.h)(0x687F7C48)

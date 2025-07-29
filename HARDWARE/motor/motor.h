@@ -32,7 +32,7 @@ typedef struct
 	float AbsSita;//绝对角度
 	float baseSita;//基准角度 
 	float FrontLidarCaliDis;//标定
-	int SideLidarCaliDis;//标定
+	uint16_t SideLidarCaliDis;//标定
 
 
 	All_Motor_Stat motorStat;
